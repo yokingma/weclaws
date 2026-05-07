@@ -478,7 +478,7 @@ Better Auth 原生入口。
 {
   "data": {
     "result": {
-      "bundleVersion": "2026-04-09-initial",
+      "bundleVersion": "2026-04-15-curated-v6",
       "error": null,
       "errors": [],
       "installedSkills": [],

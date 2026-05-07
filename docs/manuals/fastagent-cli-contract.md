@@ -147,6 +147,10 @@ WeClaws 在这个目录下额外约定：
 
 这些约定都属于 WeClaws 控制面自己的运行时补充规则，不要求 FastAgent CLI 本身显式理解这些文件。
 
+托管 skills 的完整同步策略和当前默认清单见：
+
+- `docs/manuals/managed-skills.md`
+
 ### `IM_GATEWAY_WORKSPACE_DIR`
 
 实例级工作区目录。

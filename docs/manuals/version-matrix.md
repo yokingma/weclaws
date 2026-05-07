@@ -92,6 +92,7 @@
 | default Compose JS runtime / package manager | `bun@1.3.13` |
 | default Compose Node package manager | `pnpm@9.15.4` |
 | default Compose Python project / package manager | `uv@0.11.7` |
+| default Compose GitHub CLI | distro `gh` package |
 | manager health port | `8788` |
 | default per-user pool size | `3` |
 | default per-user session timeout | `600000ms` |
@@ -104,7 +105,8 @@
 - `pnpm` 版本由 `infra/compose/.env.example` 里的 `PNPM_VERSION=9.15.4` 控制，并与根 `package.json#packageManager` 对齐
 - `uv` 版本由 `infra/compose/.env.example` 里的 `UV_VERSION=0.11.7` 控制
 - 当前 Compose 默认网络策略已跟随上游 `sandbox-runtime@0.5.0` 的 denylist 公开语义：通过 `SRT_DEFAULT_DENIED_DOMAINS` 写入每个 user pool，空值表示 allow-by-default
-- 当前 sandbox 镜像会预装系统 `chromium`、系统 `python3`，并设置 `AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium`；非 ARM64 构建阶段继续执行 `agent-browser install --with-deps`，Linux ARM64 则直接复用系统 Chromium
+- 当前 sandbox 镜像会预装系统 `chromium`、系统 `python3`、`gh`、`ffmpeg`、`jq`、压缩包工具、PDF / `.docx` 文本提取工具，并设置 `AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium`；非 ARM64 构建阶段继续执行 `agent-browser install --with-deps`，Linux ARM64 则直接复用系统 Chromium
+- 浏览器自动化能力仍在 WeClaws 产品层接入中；`agent-browser` 和 Chromium 当前属于镜像预置能力，不代表完整用户体验已经稳定开放
 
 ## 8. Runtime Config Defaults
 

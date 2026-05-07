@@ -105,7 +105,7 @@
 - 生产环境如果切到 `infra/compose/docker-compose.prod.yml`，必须用 `${WECLAWS_DATA_ROOT}` bind mount 显式把 `sqlite`、`instances`、`sandbox-user-workspaces` 和 `sandbox-runtime-private` 落到宿主机目录；不要把生产运行态继续藏在 Docker named volume 里
 - 公开仓库的 `docker-compose.prod.yml` 默认拉取 `ghcr.io/baseclaw/weclaws/{web,supervisor,sandbox-runtime}:latest`；如果切换到别的镜像仓库，必须连同 Compose 回归测试和部署手册一起更新
 - AI 在 remote sandbox 内直接调用的浏览器、媒体、文档和文件处理 CLI 必须收口到 `sandbox-runtime`，不要继续把这类能力加到 `supervisor` 镜像里
-- 当前 `sandbox-runtime` 运行镜像会额外预装 `agent-browser`、`bun`、`pnpm`、`uv`、系统 `python3`、系统 `chromium`、`ffmpeg`、`jq`、`zip`、`unzip`、`file`、`poppler-utils`、`pandoc`；其中 PDF / `.docx` 仅覆盖纯文本提取，不包含 OCR 或 `.doc` 兼容链
+- 当前 `sandbox-runtime` 运行镜像会额外预装 `agent-browser`、`bun`、`pnpm`、`uv`、系统 `python3`、系统 `chromium`、`gh`、`ffmpeg`、`jq`、`zip`、`unzip`、`file`、`poppler-utils`、`pandoc`；其中 PDF / `.docx` 仅覆盖纯文本提取，不包含 OCR 或 `.doc` 兼容链；浏览器自动化能力仍在产品层接入中
 - Compose 相关回归测试要锁住跨服务的环境注入 contract；当前至少需要覆盖 `web` 容器的 `WEB_ADMIN_EMAILS` / `WEB_USER_BOT_LIMIT` 和核心 web env，避免 `standalone` 运行层因为拿不到宿主机根 `.env` 而静默漂移
 - 即使 sandbox 改为 repo-local packaging，应用层边界也不变；FastAgent child 只依赖 owner-specific `SANDBOX_URL` / `SANDBOX_API_KEY` 和既有 HTTP / Socket.IO contract
 - Compose 部署路径固定为仓库内三镜像拓扑；不要重新引入 external sandbox override 或 `SANDBOX_RUNTIME_IMAGE`

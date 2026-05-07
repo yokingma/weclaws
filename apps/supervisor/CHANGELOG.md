@@ -4,6 +4,7 @@
 
 ### Changed
 
+- `sandbox-runtime` 运行镜像现在额外预装 `gh`，让默认同步的 `github` 托管技能在 remote sandbox 执行面具备基础 CLI；README、部署手册、版本矩阵和托管技能手册已同步补齐。
 - `infra/compose/docker-compose.prod.yml` 的公开镜像前缀已切到 `ghcr.io/baseclaw/weclaws/*:latest`，避免公开仓库继续默认引用旧私有 registry；对应 Compose 回归测试也已同步到 GHCR 基线。
 
 ### Fixed

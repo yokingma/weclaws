@@ -25,6 +25,7 @@ RUN apt-get update \
     ffmpeg \
     file \
     g++ \
+    gh \
     git \
     jq \
     make \
