@@ -119,7 +119,7 @@
 - `pnpm` 版本由 `infra/compose/.env.example` 里的 `PNPM_VERSION=9.15.4` 控制，并与根 `package.json#packageManager` 对齐
 - `uv` 版本由 `infra/compose/.env.example` 里的 `UV_VERSION=0.11.7` 控制
 - 当前 Compose 默认网络策略已跟随上游 `sandbox-runtime@0.5.0` 的 denylist 公开语义：通过 `SRT_DEFAULT_DENIED_DOMAINS` 写入每个 user pool，空值表示 allow-by-default
-- 当前 sandbox 镜像会预装系统 `chromium`、系统 `python3`、`gh`、`ffmpeg`、`jq`、压缩包工具、PDF / `.docx` 文本提取工具，并设置 `AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium`；非 ARM64 构建阶段继续执行 `agent-browser install --with-deps`，Linux ARM64 则直接复用系统 Chromium
+- 当前 sandbox 镜像会预装系统 `python3`、`gh`、`ffmpeg`、`jq`、压缩包工具、PDF / `.docx` 文本提取工具；公开 Compose 基线只保留 Browserless 远程浏览器路径，不再预装本地 Chromium 或执行 `agent-browser install --with-deps`
 - 当前默认浏览器执行路径由 `sandbox-runtime` 内的 `agent-browser@0.27.0` 连接 Compose `browserless` sidecar；`--cdp` 保留为调试兜底路径
 
 ## 9. Runtime Config Defaults

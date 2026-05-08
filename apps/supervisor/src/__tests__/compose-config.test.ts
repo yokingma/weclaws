@@ -289,7 +289,9 @@ describe('docker compose supervisor env wiring', () => {
     expect(dockerfile).toContain('unzip');
     expect(dockerfile).toContain('zip');
     expect(dockerfile).toContain('npm install -g agent-browser@${AGENT_BROWSER_NPM_VERSION}');
-    expect(dockerfile).toContain('agent-browser install --with-deps');
+    expect(dockerfile).not.toContain('agent-browser install --with-deps');
+    expect(dockerfile).not.toContain('chromium');
+    expect(dockerfile).not.toContain('AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium');
     expect(dockerfile).toContain('ENV PATH="/usr/local/bin:${PATH}"');
     expect(dockerfile).toContain(
       'amd64) bun_target="linux-x64-baseline" ;;',
@@ -305,18 +307,6 @@ describe('docker compose supervisor env wiring', () => {
     expect(dockerfile).toContain(
       'curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | env UV_UNMANAGED_INSTALL="/usr/local/bin" sh',
     );
-  });
-
-  it('falls back to system chromium for linux arm64 sandbox builds', async () => {
-    const dockerfilePath = fileURLToPath(
-      new URL('../../../../infra/docker/sandbox-runtime.Dockerfile', import.meta.url),
-    );
-    const dockerfile = await readFile(dockerfilePath, 'utf8');
-
-    expect(dockerfile).toContain('ARG TARGETARCH');
-    expect(dockerfile).toContain('chromium');
-    expect(dockerfile).toContain('if [ "$TARGETARCH" = "arm64" ]; then');
-    expect(dockerfile).toContain('AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium');
   });
 
   it('passes web runtime env and SRT admin status config into the web container', async () => {

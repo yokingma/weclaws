@@ -20,7 +20,6 @@ RUN apt-get update \
     bash \
     bubblewrap \
     ca-certificates \
-    chromium \
     curl \
     ffmpeg \
     file \
@@ -39,8 +38,6 @@ RUN apt-get update \
     zip \
   && rm -f /etc/passwd- /etc/shadow- /etc/group- /etc/gshadow- \
   && rm -rf /var/lib/apt/lists/*
-
-ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
 
 RUN set -eux; \
   case "$TARGETARCH" in \
@@ -67,11 +64,6 @@ RUN set -eux; \
   test -n "$SANDBOX_RUNTIME_NPM_VERSION"; \
   npm install -g "@fastagent/sandbox-runtime@${SANDBOX_RUNTIME_NPM_VERSION}"
 RUN npm install -g agent-browser@${AGENT_BROWSER_NPM_VERSION}
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-    echo "Skipping agent-browser install --with-deps on linux/arm64; using system chromium"; \
-  else \
-    agent-browser install --with-deps; \
-  fi
 
 WORKDIR /app
 

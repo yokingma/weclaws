@@ -5,7 +5,7 @@ description: Use when the user needs browser automation for websites, web apps, 
 
 # agent-browser
 
-Browser automation CLI for AI agents. In WeClaws, the preferred runtime path is `agent-browser -p browserless` so the actual browser runs in the Compose `browserless` sidecar instead of inside the nested sandbox.
+Browser automation CLI for AI agents. In WeClaws, the supported runtime path is `agent-browser -p browserless` so the actual browser runs in the Compose `browserless` sidecar instead of inside the nested sandbox.
 
 ## Loading Skills
 
@@ -48,6 +48,7 @@ Notes:
 
 - `sandbox-runtime` keeps the `agent-browser` client and file outputs.
 - `browserless` owns the real browser process in the supported remote path.
+- WeClaws does not support launching a local browser inside `sandbox-runtime`; use Browserless or direct CDP to the remote browser backend.
 - Screenshots, downloads, PDFs, and extracted files still land in the bot-accessible filesystem inside the sandbox workspace.
 
 ## Why agent-browser

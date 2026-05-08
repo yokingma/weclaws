@@ -89,8 +89,7 @@
 - `sandbox-runtime` 镜像里的 `bun` 必须安装在 sandbox session 可见的系统路径（当前固定 `/usr/local/bin`）；不要再装到 `/root/.bun/bin`，因为 remote sandbox 本身会 deny `/root`
 - Linux `amd64` 上的 `bun` 必须固定使用官方 `linux-x64-baseline` 资产，而不是让安装脚本按构建机 CPU 自动挑版本；否则镜像如果在支持 AVX2 的 builder 上构建，部署到不支持 AVX2 的老 x64 CPU 会直接 `Illegal instruction` / core dump
 - Compose 的 per-user SRT 默认基线固定为 `SRT_DEFAULT_POOL_SIZE=3`、`SRT_DEFAULT_SESSION_TIMEOUT_MS=600000`、`SRT_DEFAULT_MIN_READY_PROCESSES=1`、`SRT_DEFAULT_MAX_CONCURRENT_INIT=1`；这些默认值必须同时注入 `web` 和 `supervisor`，避免注册时建出的 pool 与 supervisor 渲染期漂移
-- `sandbox-runtime` 镜像必须自带可直接调用的 Chromium 基线；当前约定是预装系统 `chromium` 并设置 `AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium`，这样 Linux ARM64 不依赖 Chrome for Testing 也能直接跑 `agent-browser`
-- Compose 默认还会提供 `browserless` sidecar 作为受支持的远程浏览器后端；首选产品路径是由 `sandbox-runtime` 内的 `agent-browser -p browserless` 连接 sidecar，而不是在 nested sandbox 内直接 launch 本地 Chromium
+- Compose 默认还会提供 `browserless` sidecar 作为受支持的远程浏览器后端；浏览器自动化的产品路径固定为 `sandbox-runtime` 内的 `agent-browser -p browserless` 连接 sidecar，不再支持在 nested sandbox 内直接 launch 本地 Chromium
 - repo-local `sandbox-runtime` 镜像入口固定走 `infra/sandbox-runtime/entry.mjs` manager；manager 读取 `srt-pools.json`，按 enabled user pool 启停 `srt-child-entry.mjs`
 - `srt-child-entry.mjs` 是唯一允许启动 `SandboxAPI` 的子进程入口；它会读取 `SANDBOX_WORKSPACE_MAP_FILE`，把对外 session root 固定成 `/workspace`，并在命令执行前把虚拟 cwd 翻译回真实 bot `workspace` / `data`
 - child wrapper 还会通过 `NODE_OPTIONS=--import=.../worker-bootstrap.mjs` 给 sandbox worker 预加载 WeClaws bootstrap；这个 bootstrap 只负责在 Linux 下把当前 session 的 `allowWrite` 根追加回最终 bwrap 参数，避免对 `storageRoot`、`instancesRoot`、`SRT_WORKSPACE_BASE_ROOT`、pool `basePath` 等父级目录的 deny 重新把当前 bot 压成只读
@@ -107,7 +106,7 @@
 - 生产 Compose override 现在同时拉起 `browserless` sidecar；不要把受支持的远程浏览器执行路径重新收回到 supervisor 或宿主机
 - 公开仓库的 `docker-compose.prod.yml` 默认拉取 `ghcr.io/baseclaw/weclaws/{web,supervisor,sandbox-runtime}:latest`；如果切换到别的镜像仓库，必须连同 Compose 回归测试和部署手册一起更新
 - AI 在 remote sandbox 内直接调用的浏览器、媒体、文档和文件处理 CLI 必须收口到 `sandbox-runtime`，不要继续把这类能力加到 `supervisor` 镜像里
-- 当前 `sandbox-runtime` 运行镜像会额外预装 `agent-browser`、`bun`、`pnpm`、`uv`、系统 `python3`、系统 `chromium`、`gh`、`ffmpeg`、`jq`、`zip`、`unzip`、`file`、`poppler-utils`、`pandoc`；其中 PDF / `.docx` 仅覆盖纯文本提取，不包含 OCR 或 `.doc` 兼容链；浏览器自动化的受支持路径是 Browserless sidecar 优先，`--cdp` 仅保留为运维/调试兜底
+- 当前 `sandbox-runtime` 运行镜像会额外预装 `agent-browser`、`bun`、`pnpm`、`uv`、系统 `python3`、`gh`、`ffmpeg`、`jq`、`zip`、`unzip`、`file`、`poppler-utils`、`pandoc`；其中 PDF / `.docx` 仅覆盖纯文本提取，不包含 OCR 或 `.doc` 兼容链；浏览器自动化的受支持路径固定为 Browserless sidecar，`--cdp` 仅保留为运维/调试兜底
 - Compose 相关回归测试要锁住跨服务的环境注入 contract；当前至少需要覆盖 `web` 容器的 `WEB_ADMIN_EMAILS` / `WEB_USER_BOT_LIMIT` 和核心 web env，避免 `standalone` 运行层因为拿不到宿主机根 `.env` 而静默漂移
 - 即使 sandbox 改为 repo-local packaging，应用层边界也不变；FastAgent child 只依赖 owner-specific `SANDBOX_URL` / `SANDBOX_API_KEY` 和既有 HTTP / Socket.IO contract
 - Compose 部署路径固定为仓库内四服务拓扑（`web`、`supervisor`、`sandbox-runtime`、`browserless`）；不要重新引入 external sandbox override 或 `SANDBOX_RUNTIME_IMAGE`
