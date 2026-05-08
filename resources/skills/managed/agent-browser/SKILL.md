@@ -5,9 +5,7 @@ description: Use when the user needs browser automation for websites, web apps, 
 
 # agent-browser
 
-Browser automation CLI for AI agents. Uses Chrome/Chromium via CDP directly.
-
-Install: `npm i -g agent-browser && agent-browser install`
+Browser automation CLI for AI agents. In WeClaws, the preferred runtime path is `agent-browser -p browserless` so the actual browser runs in the Compose `browserless` sidecar instead of inside the nested sandbox.
 
 ## Loading Skills
 
@@ -17,18 +15,40 @@ by the CLI and changes between versions. Guessing at commands without loading th
 will produce incorrect or outdated invocations.
 
 ```bash
-agent-browser skills get agent-browser    # Required before any browser automation
+agent-browser skills get core --full      # Required before core browser automation
 agent-browser skills get <name> --full    # Include references and templates
 ```
 
 ## Available Skills
 
-- **agent-browser** — Core browser automation
+- **core** — Core browser automation
 - **dogfood** — Exploratory testing and QA
 - **electron** — Electron desktop app automation
 - **slack** — Slack workspace automation
 - **vercel-sandbox** — Browser automation in Vercel Sandbox
 - **agentcore** — Browser automation on AWS Bedrock AgentCore
+
+## WeClaws Runtime Path
+
+Primary path in the default Compose deployment:
+
+```bash
+export BROWSERLESS_API_URL="http://browserless:3000"
+export BROWSERLESS_API_KEY="your-browserless-token"
+agent-browser -p browserless open https://example.com
+```
+
+Fallback path for direct CDP debugging:
+
+```bash
+agent-browser --cdp "ws://browserless:3000/chromium?token=your-browserless-token" open https://example.com
+```
+
+Notes:
+
+- `sandbox-runtime` keeps the `agent-browser` client and file outputs.
+- `browserless` owns the real browser process in the supported remote path.
+- Screenshots, downloads, PDFs, and extracted files still land in the bot-accessible filesystem inside the sandbox workspace.
 
 ## Why agent-browser
 

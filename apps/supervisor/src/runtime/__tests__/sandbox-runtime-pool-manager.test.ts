@@ -35,6 +35,8 @@ describe('sandbox-runtime pool manager', () => {
   it('builds child env from one pool without leaking global sandbox credentials', () => {
     const env = buildChildEnv(createPoolFixture(), {
       API_KEY: 'global-key',
+      BROWSERLESS_API_KEY: 'browserless-key',
+      BROWSERLESS_API_URL: 'http://browserless:3000',
       PATH: '/usr/bin',
       SANDBOX_URL: 'http://global-sandbox:8788',
     });
@@ -42,6 +44,8 @@ describe('sandbox-runtime pool manager', () => {
     expect(env).toMatchObject({
       API_KEY: 'pool-key',
       AUTH_ENABLED: 'true',
+      BROWSERLESS_API_KEY: 'browserless-key',
+      BROWSERLESS_API_URL: 'http://browserless:3000',
       FASTAGENT_SANDBOX_ALLOW_HOST_BIND: 'false',
       FASTAGENT_SANDBOX_PROFILE: 'shared',
       HOST: '0.0.0.0',

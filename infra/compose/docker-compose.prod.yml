@@ -1,4 +1,9 @@
 services:
+  browserless:
+    build: !reset null
+    image: ghcr.io/browserless/chromium:latest
+    pull_policy: always
+
   sandbox-runtime:
     build: !reset null
     image: ghcr.io/baseclaw/weclaws/sandbox-runtime:latest

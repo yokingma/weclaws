@@ -79,17 +79,18 @@
 
 - 当前容器入口固定为 `node apps/supervisor/dist/index.js`
 - `apps/supervisor/scripts/build.mjs` 是 supervisor Docker 运行产物的唯一构建入口：它会 bundle `src/index.ts` 以及 workspace 内的 `@weclaws/db` / `@weclaws/shared`，并把 `packages/db/src/migrations` 复制到 `apps/supervisor/dist/migrations`
-- `apps/supervisor` 自己声明 `@fastagent/cli@0.6.42` 运行时依赖；Compose 构建直接复用包级 `node_modules/.bin/fastagent`，不再额外全局安装或固定注入 `FASTAGENT_BINARY_PATH`
+- `apps/supervisor` 自己声明 `@fastagent/cli@0.6.43` 运行时依赖；Compose 构建直接复用包级 `node_modules/.bin/fastagent`，不再额外全局安装或固定注入 `FASTAGENT_BINARY_PATH`
 - repo-local `@fastagent/cli` 版本升级时，`apps/supervisor/package.json`、根 `pnpm-lock.yaml`、`docs/manuals/fastagent-cli-contract.md`、`docs/manuals/version-matrix.md`、`docs/manuals/docker-deployment-runbook.md` 必须在同一次改动里同步，并由 `apps/supervisor/src/__tests__/compose-config.test.ts` 锁住
 - Compose 默认会在本仓库内构建 `sandbox-runtime` 运行镜像，并通过 `infra/docker/sandbox-runtime.versions.env` 固定 `@fastagent/sandbox-runtime` 版本；当前默认基线是 `0.5.0`
 - `sandbox-runtime` 镜像构建时必须删除 Debian 账号数据库备份文件 `/etc/passwd-`、`/etc/shadow-`、`/etc/group-` 和 `/etc/gshadow-`；session denyRead 仍保留这些路径作为运行期兜底
 - `sandbox-runtime` 的发布镜像构建任务不能硬编码或传入 `SANDBOX_RUNTIME_NPM_VERSION`；生产 `latest` 镜像必须走同一个 Dockerfile 版本文件默认值
-- Compose 默认还会通过 `AGENT_BROWSER_NPM_VERSION` 固定 `agent-browser` 版本；当前基线是 `0.25.4`
+- Compose 默认还会通过 `AGENT_BROWSER_NPM_VERSION` 固定 `agent-browser` 版本；当前基线是 `0.27.0`
 - Compose 默认还会通过 `BUN_VERSION`、`PNPM_VERSION`、`UV_VERSION` 固定额外预装的 JS / Python 工具链基线；当前默认分别是 `bun@1.3.13`、`pnpm@9.15.4`、`uv@0.11.7`
 - `sandbox-runtime` 镜像里的 `bun` 必须安装在 sandbox session 可见的系统路径（当前固定 `/usr/local/bin`）；不要再装到 `/root/.bun/bin`，因为 remote sandbox 本身会 deny `/root`
 - Linux `amd64` 上的 `bun` 必须固定使用官方 `linux-x64-baseline` 资产，而不是让安装脚本按构建机 CPU 自动挑版本；否则镜像如果在支持 AVX2 的 builder 上构建，部署到不支持 AVX2 的老 x64 CPU 会直接 `Illegal instruction` / core dump
 - Compose 的 per-user SRT 默认基线固定为 `SRT_DEFAULT_POOL_SIZE=3`、`SRT_DEFAULT_SESSION_TIMEOUT_MS=600000`、`SRT_DEFAULT_MIN_READY_PROCESSES=1`、`SRT_DEFAULT_MAX_CONCURRENT_INIT=1`；这些默认值必须同时注入 `web` 和 `supervisor`，避免注册时建出的 pool 与 supervisor 渲染期漂移
 - `sandbox-runtime` 镜像必须自带可直接调用的 Chromium 基线；当前约定是预装系统 `chromium` 并设置 `AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium`，这样 Linux ARM64 不依赖 Chrome for Testing 也能直接跑 `agent-browser`
+- Compose 默认还会提供 `browserless` sidecar 作为受支持的远程浏览器后端；首选产品路径是由 `sandbox-runtime` 内的 `agent-browser -p browserless` 连接 sidecar，而不是在 nested sandbox 内直接 launch 本地 Chromium
 - repo-local `sandbox-runtime` 镜像入口固定走 `infra/sandbox-runtime/entry.mjs` manager；manager 读取 `srt-pools.json`，按 enabled user pool 启停 `srt-child-entry.mjs`
 - `srt-child-entry.mjs` 是唯一允许启动 `SandboxAPI` 的子进程入口；它会读取 `SANDBOX_WORKSPACE_MAP_FILE`，把对外 session root 固定成 `/workspace`，并在命令执行前把虚拟 cwd 翻译回真实 bot `workspace` / `data`
 - child wrapper 还会通过 `NODE_OPTIONS=--import=.../worker-bootstrap.mjs` 给 sandbox worker 预加载 WeClaws bootstrap；这个 bootstrap 只负责在 Linux 下把当前 session 的 `allowWrite` 根追加回最终 bwrap 参数，避免对 `storageRoot`、`instancesRoot`、`SRT_WORKSPACE_BASE_ROOT`、pool `basePath` 等父级目录的 deny 重新把当前 bot 压成只读
@@ -100,15 +101,16 @@
 - Compose 的 `supervisor` 服务必须显式透传 `FASTAGENT_SANDBOX_MODE`；不要依赖 compose 插值变量自动进入容器环境
 - Compose 的 `sandbox-runtime` 服务必须和 `web` / `supervisor` 共享同一份 `claws_instances` 卷，并挂到同一个 `/app/storage/instances` 路径；否则真实 workspace 映射即使命中，runtime 也无法访问 bot 工作区
 - Compose 的 `sandbox-runtime` 服务还必须和 `web` / `supervisor` 共享私有 `sandbox_runtime_private` 卷，并挂到 `/app/storage/sandbox-runtime-private`；`srt-pools.json`、`srt-pool-status.json` 和 per-user workspace map 只能放在这条私有共享路径下
-- Compose 的 `sandbox-runtime` 服务入口是 manager health port；只注入 `SRT_POOL_CONFIG_FILE`、`SRT_POOL_STATUS_FILE`、`SRT_MANAGER_PORT` 这类 manager 配置，不再注入全局 `API_KEY` / `POOL_SIZE` / `SANDBOX_DEFAULT_*` 单池 env
+- Compose 的 `sandbox-runtime` 服务入口是 manager health port；只注入 `SRT_POOL_CONFIG_FILE`、`SRT_POOL_STATUS_FILE`、`SRT_MANAGER_PORT` 这类 manager 配置，不再注入全局 `API_KEY` / `POOL_SIZE` / `SANDBOX_DEFAULT_*` 单池 env；远程浏览器路径允许额外透传 `BROWSERLESS_API_URL` / `BROWSERLESS_API_KEY`
 - Compose 的 `sandbox-runtime` 服务必须先 `cap_drop: [ALL]`，再只加回 `SYS_ADMIN` 和 `NET_ADMIN`，并使用 `cgroup: private`；同时除了 `seccomp=unconfined` 之外，还必须显式设置 `apparmor=unconfined`。Ubuntu 24 默认的 `docker-default` AppArmor profile 会让 bubblewrap 在 mount namespace 阶段直接拒绝命令执行
 - 生产环境如果切到 `infra/compose/docker-compose.prod.yml`，必须用 `${WECLAWS_DATA_ROOT}` bind mount 显式把 `sqlite`、`instances`、`sandbox-user-workspaces` 和 `sandbox-runtime-private` 落到宿主机目录；不要把生产运行态继续藏在 Docker named volume 里
+- 生产 Compose override 现在同时拉起 `browserless` sidecar；不要把受支持的远程浏览器执行路径重新收回到 supervisor 或宿主机
 - 公开仓库的 `docker-compose.prod.yml` 默认拉取 `ghcr.io/baseclaw/weclaws/{web,supervisor,sandbox-runtime}:latest`；如果切换到别的镜像仓库，必须连同 Compose 回归测试和部署手册一起更新
 - AI 在 remote sandbox 内直接调用的浏览器、媒体、文档和文件处理 CLI 必须收口到 `sandbox-runtime`，不要继续把这类能力加到 `supervisor` 镜像里
-- 当前 `sandbox-runtime` 运行镜像会额外预装 `agent-browser`、`bun`、`pnpm`、`uv`、系统 `python3`、系统 `chromium`、`gh`、`ffmpeg`、`jq`、`zip`、`unzip`、`file`、`poppler-utils`、`pandoc`；其中 PDF / `.docx` 仅覆盖纯文本提取，不包含 OCR 或 `.doc` 兼容链；浏览器自动化能力仍在产品层接入中
+- 当前 `sandbox-runtime` 运行镜像会额外预装 `agent-browser`、`bun`、`pnpm`、`uv`、系统 `python3`、系统 `chromium`、`gh`、`ffmpeg`、`jq`、`zip`、`unzip`、`file`、`poppler-utils`、`pandoc`；其中 PDF / `.docx` 仅覆盖纯文本提取，不包含 OCR 或 `.doc` 兼容链；浏览器自动化的受支持路径是 Browserless sidecar 优先，`--cdp` 仅保留为运维/调试兜底
 - Compose 相关回归测试要锁住跨服务的环境注入 contract；当前至少需要覆盖 `web` 容器的 `WEB_ADMIN_EMAILS` / `WEB_USER_BOT_LIMIT` 和核心 web env，避免 `standalone` 运行层因为拿不到宿主机根 `.env` 而静默漂移
 - 即使 sandbox 改为 repo-local packaging，应用层边界也不变；FastAgent child 只依赖 owner-specific `SANDBOX_URL` / `SANDBOX_API_KEY` 和既有 HTTP / Socket.IO contract
-- Compose 部署路径固定为仓库内三镜像拓扑；不要重新引入 external sandbox override 或 `SANDBOX_RUNTIME_IMAGE`
+- Compose 部署路径固定为仓库内四服务拓扑（`web`、`supervisor`、`sandbox-runtime`、`browserless`）；不要重新引入 external sandbox override 或 `SANDBOX_RUNTIME_IMAGE`
 - `resolve-fastagent-binary-path` 的默认 repo-local binary 解析不能依赖源码目录层级；必须同时兼容 source path 和 `dist/index.js` bundle path
 - 使用 pnpm workspace 分阶段构建镜像时，不能只复制 root `node_modules`；运行层至少还要保留 `apps/supervisor/node_modules`，供 dist 入口解析 `fastagent` 与 `better-sqlite3`
 - 当前 `supervisor` 运行镜像会额外预装 `curl`、`gh`、`ffmpeg` 作为首批官方托管 skills 的基础工具层；这类通用 CLI 可以进镜像，但用户 API key、OAuth token、设备配对态等敏感或个性化状态不能烤进镜像

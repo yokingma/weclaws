@@ -41,12 +41,12 @@
 | `skill-creator` | 创建、编辑、校验和打包 FastAgent 技能 | `python3` | 默认同步 |
 | `video-frames` | 用 ffmpeg 从视频中截帧或生成检查图 | `ffmpeg` | 默认同步 |
 | `personal-planner` | 面向复杂任务的先规划、再执行工作流 | 无额外命令依赖 | 默认同步 |
-| `agent-browser` | 浏览器自动化技能说明已收编 | `agent-browser`、Chromium | 默认同步，能力接入中 |
+| `agent-browser` | 浏览器自动化技能说明已收编 | `agent-browser`、Chromium、Browserless sidecar | 默认同步 |
 
 说明：
 
-- `agent-browser` 已进入托管同步清单，镜像也预置了 `agent-browser` 和 Chromium。
-- 浏览器自动化仍在 WeClaws 产品层补齐稳定接入和使用体验；README 与部署文档不把它描述成已完全开放的稳定能力。
+- `agent-browser` 已进入托管同步清单，`sandbox-runtime` 镜像也预置了 `agent-browser` 和 Chromium。
+- 默认 Compose 部署现在会额外提供 `browserless` sidecar；托管技能里的首选运行路径是 `agent-browser -p browserless`，而不是在 nested sandbox 内直接 launch 本地浏览器。
 
 ## 4. 同步时机
 
@@ -107,6 +107,7 @@ storage/instances/<botId>/
 - `ffmpeg`
 - `agent-browser`
 - Chromium
+- Browserless sidecar（默认 Compose 部署）
 
 技能是否真正可用仍取决于运行环境和用户授权。例如：
 

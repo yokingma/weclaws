@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-05-08
+
+### Changed
+
+- 默认 Compose 拓扑新增 `browserless` sidecar，作为 WeClaws 受支持的远程浏览器后端；`sandbox-runtime` 继续保留 `agent-browser` 客户端与文件输出边界，但真实浏览器进程现在优先交给 sidecar 承载。
+- `sandbox-runtime` 的 Compose / child allowlist 已新增 `BROWSERLESS_API_URL` 与 `BROWSERLESS_API_KEY` 透传，允许 nested sandbox 内的 `agent-browser` 直接走 `-p browserless` 连接 sidecar。
+- Compose 默认 `agent-browser` 基线已升级到 `0.27.0`，并同步把 Browserless 契约、部署手册、版本矩阵和托管技能说明对齐到 `skills get core --full` 与 `-p browserless` 主路径。
+
+### Notes
+
+- `agent-browser --cdp "<ws-url>"` 仍保留为兜底/调试路径，但不再作为默认产品接入方式。
+
 ## 2026-05-07
 
 ### Changed

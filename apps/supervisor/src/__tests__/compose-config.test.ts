@@ -64,9 +64,9 @@ describe('docker compose supervisor env wiring', () => {
     ]);
 
     expect(composeFile).toContain(
-      'AGENT_BROWSER_NPM_VERSION: ${AGENT_BROWSER_NPM_VERSION:-0.25.4}',
+      'AGENT_BROWSER_NPM_VERSION: ${AGENT_BROWSER_NPM_VERSION:-0.27.0}',
     );
-    expect(envExample).toContain('AGENT_BROWSER_NPM_VERSION=0.25.4');
+    expect(envExample).toContain('AGENT_BROWSER_NPM_VERSION=0.27.0');
   });
 
   it('pins bun and uv versions through the sandbox compose build surface', async () => {
@@ -246,6 +246,9 @@ describe('docker compose supervisor env wiring', () => {
       'image: ghcr.io/baseclaw/weclaws/sandbox-runtime:latest',
     );
     expect(prodComposeFile).toContain(
+      'image: ghcr.io/browserless/chromium:latest',
+    );
+    expect(prodComposeFile).toContain(
       'image: ghcr.io/baseclaw/weclaws/supervisor:latest',
     );
     expect(prodComposeFile).toContain('image: ghcr.io/baseclaw/weclaws/web:latest');
@@ -273,7 +276,7 @@ describe('docker compose supervisor env wiring', () => {
     );
     const dockerfile = await readFile(dockerfilePath, 'utf8');
 
-    expect(dockerfile).toContain('ARG AGENT_BROWSER_NPM_VERSION=0.25.4');
+    expect(dockerfile).toContain('ARG AGENT_BROWSER_NPM_VERSION=0.27.0');
     expect(dockerfile).toContain('ARG BUN_VERSION=1.3.13');
     expect(dockerfile).toContain('ARG PNPM_VERSION=9.15.4');
     expect(dockerfile).toContain('ARG UV_VERSION=0.11.7');
@@ -330,6 +333,45 @@ describe('docker compose supervisor env wiring', () => {
     expect(composeFile).not.toContain('FASTAGENT_API_KEY: ${FASTAGENT_API_KEY:-}');
     expect(composeFile).not.toContain('FASTAGENT_BASE_URL: ${FASTAGENT_BASE_URL:-}');
     expect(composeFile).not.toContain('FASTAGENT_API_TYPE: ${FASTAGENT_API_TYPE:-}');
+  });
+
+  it('defines a browserless sidecar contract for remote browser automation', async () => {
+    const composePath = fileURLToPath(
+      new URL('../../../../infra/compose/docker-compose.yml', import.meta.url),
+    );
+    const prodComposePath = fileURLToPath(
+      new URL('../../../../infra/compose/docker-compose.prod.yml', import.meta.url),
+    );
+    const envExamplePath = fileURLToPath(
+      new URL('../../../../infra/compose/.env.example', import.meta.url),
+    );
+
+    const [composeFile, prodComposeFile, envExample] = await Promise.all([
+      readFile(composePath, 'utf8'),
+      readFile(prodComposePath, 'utf8'),
+      readFile(envExamplePath, 'utf8'),
+    ]);
+
+    expect(composeFile).toContain('browserless:');
+    expect(composeFile).toContain('image: ghcr.io/browserless/chromium');
+    expect(composeFile).not.toContain('- "${BROWSERLESS_PORT:-3000}:3000"');
+    expect(composeFile).toContain('TOKEN: ${BROWSERLESS_TOKEN}');
+    expect(composeFile).toContain('CONCURRENT: ${BROWSERLESS_CONCURRENT:-2}');
+    expect(composeFile).toContain('QUEUED: ${BROWSERLESS_QUEUED:-2}');
+    expect(composeFile).toContain('TIMEOUT: ${BROWSERLESS_TIMEOUT:-120000}');
+    expect(composeFile).toContain(
+      'BROWSERLESS_API_URL: ${BROWSERLESS_API_URL:-http://browserless:3000}',
+    );
+    expect(composeFile).toContain('BROWSERLESS_API_KEY: ${BROWSERLESS_TOKEN}');
+    expect(prodComposeFile).toContain('browserless:');
+    expect(prodComposeFile).toContain('image: ghcr.io/browserless/chromium:latest');
+    expect(prodComposeFile).toContain('pull_policy: always');
+    expect(envExample).toContain('BROWSERLESS_TOKEN=replace-me');
+    expect(envExample).not.toContain('# BROWSERLESS_TOKEN=replace-me');
+    expect(envExample).toContain('# BROWSERLESS_API_URL=http://browserless:3000');
+    expect(envExample).toContain('# BROWSERLESS_CONCURRENT=2');
+    expect(envExample).toContain('# BROWSERLESS_QUEUED=2');
+    expect(envExample).toContain('# BROWSERLESS_TIMEOUT=120000');
   });
 
   it('runs supervisor from compiled output in the Docker image', async () => {

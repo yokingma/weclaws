@@ -24,7 +24,8 @@
 
 | 镜像 | Dockerfile | 作用 | 关键特征 |
 | --- | --- | --- | --- |
-| `sandbox-runtime` | `infra/docker/sandbox-runtime.Dockerfile` | FastAgent remote sandbox 服务 | 从 `@fastagent/sandbox-runtime` npm 包安装，并通过 repo-local wrapper 对齐真实 bot workspace；额外预装 `agent-browser`、Chromium、`bun`、`pnpm`、`uv`、`gh`、`ffmpeg`、`jq`、压缩包工具以及 PDF / `.docx` 文本提取 CLI；浏览器自动化能力仍在接入中 |
+| `sandbox-runtime` | `infra/docker/sandbox-runtime.Dockerfile` | FastAgent remote sandbox 服务 | 从 `@fastagent/sandbox-runtime` npm 包安装，并通过 repo-local wrapper 对齐真实 bot workspace；额外预装 `agent-browser`、Chromium、`bun`、`pnpm`、`uv`、`gh`、`ffmpeg`、`jq`、压缩包工具以及 PDF / `.docx` 文本提取 CLI；默认浏览器路径通过 Browserless sidecar 执行 |
+| `browserless` | Compose image `ghcr.io/browserless/chromium` | 远程浏览器 sidecar | 为 `sandbox-runtime` 内的 `agent-browser -p browserless` 提供受支持的浏览器会话后端 |
 | `supervisor` | `infra/docker/supervisor.Dockerfile` | 管理 bot 生命周期、收敛状态、自动迁移 DB | 构建阶段 bundle 出 `dist/index.js`，运行层复用 repo-local `@fastagent/cli@0.6.43`，并预装 `curl`、`gh`、`ffmpeg`、`procps` |
 | `web` | `infra/docker/web.Dockerfile` | Next.js UI/API | 使用 Next `standalone` 运行层，并额外保留 `pnpm-workspace.yaml`、`apps/supervisor/package.json`、`resources/skills/managed` 与 `procps`，保证页头 FastAgent CLI 版本 badge 和 owner-scoped `Sync Skills` 接口都能在生产镜像中正常工作 |
 
@@ -49,6 +50,7 @@
 
 - `infra/compose/docker-compose.yml` 作为本地联调基线。
 - `infra/compose/docker-compose.prod.yml` 会用 `build: !reset null` 清掉基础文件里的本地构建定义，默认改成拉取 `ghcr.io/baseclaw/weclaws/*:latest`，并通过 `WECLAWS_DATA_ROOT` 把 SQLite、instances、sandbox user workspaces 和 sandbox-runtime private config/status 绑定到宿主机目录。
+- 生产 override 还会拉起 `ghcr.io/browserless/chromium:latest`，保持和本地基线一致的远程浏览器拓扑。
 - 生产部署时应叠加两个 Compose 文件，保持同一份服务拓扑、卷、健康检查和环境变量 contract。
 
 ## 3. Prerequisites
@@ -64,6 +66,8 @@
 - `APP_BASE_URL` 已和最终对外访问地址对齐；如果修改了 `WEB_PORT`，也要同步调整它。
 - 如果需要首个管理员自举注册，`WEB_ADMIN_EMAILS` 已填写管理员邮箱白名单；不需要时可以留空。
 - 如果走默认本仓库 sandbox 打包路径，允许构建 `infra/docker/sandbox-runtime.Dockerfile`。
+- 如果要启用默认远程浏览器路径，`BROWSERLESS_TOKEN` 应替换成真实 token；不需要宿主机侧直连时，不必覆盖 `BROWSERLESS_API_URL`
+- 默认 Compose 不会把 `browserless` 暴露到宿主机端口；只有在本地调试或外部客户端接入时，才应通过额外 override 单独加 `ports`
 - 已确认根 `.env.example` 和 `infra/compose/.env.example` 的默认 provider/model 并不相同。
 
 ### 3.1 Environment File Ownership
@@ -178,7 +182,7 @@ WEB_PORT=3000
 - Compose 还会给 supervisor 注入 `SRT_WORKSPACE_MAP_DIR=/app/storage/sandbox-runtime-private/workspace-map`；workspace map 只允许 supervisor 与 sandbox-runtime 通过私有共享卷读写，不再混在 `/app/storage/instances` 根目录里。
 - 当前 Compose 基线会把新用户 pool 默认设为 `SRT_DEFAULT_POOL_SIZE=3`、`SRT_DEFAULT_MIN_READY_PROCESSES=1`、`SRT_DEFAULT_SESSION_TIMEOUT_MS=600000`。
 - sandbox 镜像里额外包含的常用 CLI 基线：
-  - 浏览器自动化支持建设中：`agent-browser`、`chromium`
+  - 浏览器自动化：`agent-browser`、`chromium`
   - JS 运行 / 包管理：`bun`
   - Node 包管理：`pnpm`
   - Python 项目 / 包管理：`uv`
@@ -188,6 +192,7 @@ WEB_PORT=3000
   - 数据/文件：`jq`、`zip`、`unzip`、`file`
   - 文本提取：`pdftotext` / `pdfinfo`（来自 `poppler-utils`）、`pandoc`
 - 这批工具属于 remote sandbox 执行面。
+- 默认 Compose 还会额外提供 `browserless` sidecar；受支持路径是 `sandbox-runtime` 内的 `agent-browser -p browserless`
 
 ## 5. Build Commands
 
@@ -195,7 +200,7 @@ WEB_PORT=3000
 
 ```bash
 docker build -f infra/docker/sandbox-runtime.Dockerfile \
-  --build-arg AGENT_BROWSER_NPM_VERSION=0.25.4 \
+  --build-arg AGENT_BROWSER_NPM_VERSION=0.27.0 \
   --build-arg BUN_VERSION=1.3.13 \
   --build-arg PNPM_VERSION=9.15.4 \
   --build-arg UV_VERSION=0.11.7 \
@@ -271,8 +276,9 @@ docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml
 
 ## 6. Compose Topology
 
-当前 Compose 栈包含三个服务：
+当前 Compose 栈包含四个服务：
 
+- `browserless`
 - `sandbox-runtime`
 - `supervisor`
 - `web`
@@ -295,6 +301,8 @@ docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml
 - `sandbox-runtime` 现在也必须挂载同一份 `claws_instances` 到相同绝对路径；否则 workspace map 就算命中，runtime 也无法访问 FastAgent child 实际传入的真实 `cwd`。
 - `srt-pools.json`、`srt-pool-status.json` 和 workspace map 现在必须单独放在私有 `sandbox_runtime_private` 卷里，只给 `web`、`supervisor` 和 `sandbox-runtime` 共享；不要再把它写进 `instances` 根目录。
 - `sandbox-runtime` 仍然是独立 HTTP / Socket.IO 服务边界。
+- `browserless` 提供远程浏览器会话后端；默认由 `sandbox-runtime` 内的 `agent-browser -p browserless` 通过 Compose 内部服务名访问。
+- base Compose 不会给 `browserless` 配置宿主机 `ports`；默认只允许内部 Compose 网络访问。
 - 当前 Compose 已为 `sandbox-runtime` 固定配置：
   - `cap_drop: [ALL]`
   - `cap_add: [SYS_ADMIN, NET_ADMIN]`
@@ -388,6 +396,7 @@ curl -i http://localhost:8788/health
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml logs -f web
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml logs -f supervisor
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml logs -f sandbox-runtime
+docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml logs -f browserless
 ```
 
 ### 8.4 Real Turn Smoke
@@ -410,6 +419,7 @@ docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml build web
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml build supervisor
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml build sandbox-runtime
+docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml build browserless
 ```
 
 ### 9.2 Restart A Single Service
@@ -418,6 +428,7 @@ docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml restart web
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml restart supervisor
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml restart sandbox-runtime
+docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml restart browserless
 ```
 
 ### 9.3 Inspect Resolved Compose Values
@@ -431,6 +442,7 @@ docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml
 ```bash
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml exec supervisor sh
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml exec sandbox-runtime sh
+docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml exec browserless sh
 ```
 
 `web` 容器是精简运行层，不建议把它当调试入口或工具容器使用。

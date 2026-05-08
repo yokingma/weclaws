@@ -209,7 +209,12 @@
 | `WECLAWS_DATA_ROOT` | production compose override | No | `/srv/weclaws/data` | `docker-compose.prod.yml` 用它把 SQLite、instances、sandbox user workspaces 和 sandbox-runtime private config/status 显式落到宿主机目录 |
 | `WEB_PORT` | compose, web host port mapping | No | `3000` | 控制宿主机暴露端口；应与 `APP_BASE_URL` 的对外 URL 保持一致 |
 | `SANDBOX_RUNTIME_NPM_VERSION` | compose build arg | No | unset; default comes from `infra/docker/sandbox-runtime.versions.env` | 临时覆盖 repo-local sandbox image 安装的 `@fastagent/sandbox-runtime` 版本 |
-| `AGENT_BROWSER_NPM_VERSION` | compose build arg | No | `0.25.4` | 控制 repo-local sandbox image 安装的 `agent-browser` 版本 |
+| `AGENT_BROWSER_NPM_VERSION` | compose build arg | No | `0.27.0` | 控制 repo-local sandbox image 安装的 `agent-browser` 版本 |
+| `BROWSERLESS_TOKEN` | browserless, sandbox-runtime | Yes | `replace-me` | 默认 Compose 用它保护 `browserless` sidecar，并映射成 `sandbox-runtime` 里的 `BROWSERLESS_API_KEY` |
+| `BROWSERLESS_API_URL` | sandbox-runtime | No | `http://browserless:3000` | `agent-browser -p browserless` 在 Compose 内连接 sidecar 的默认地址 |
+| `BROWSERLESS_CONCURRENT` | browserless | No | `2` | Browserless 并发会话上限 |
+| `BROWSERLESS_QUEUED` | browserless | No | `2` | Browserless 排队上限 |
+| `BROWSERLESS_TIMEOUT` | browserless | No | `120000` | Browserless 默认请求/会话超时 |
 | `BUN_VERSION` | compose build arg | No | `1.3.13` | 控制 repo-local sandbox image 安装的 `bun` 版本 |
 | `PNPM_VERSION` | compose build arg | No | `9.15.4` | 控制 repo-local sandbox image 安装的 `pnpm` 版本 |
 | `UV_VERSION` | compose build arg | No | `0.11.7` | 控制 repo-local sandbox image 安装的 `uv` 版本 |
@@ -235,6 +240,9 @@
 - Compose 文件里 `sandbox-runtime` 服务入口是 manager；manager 不再接收全局 `API_KEY`
 - per-user SRT child 的 `API_KEY` 由 `srt-pools.json` 逐用户写入，并只注入对应 child
 - `AGENT_BROWSER_NPM_VERSION`、`BUN_VERSION`、`PNPM_VERSION`、`UV_VERSION` 只影响 sandbox 镜像构建内容，不会作为运行时 env 进入容器
+- `BROWSERLESS_TOKEN` 会同时进入 `browserless` sidecar 和 `sandbox-runtime`，后者再通过 child env allowlist 透传成 `BROWSERLESS_API_KEY`
+- `BROWSERLESS_API_URL` 默认指向 Compose 内部服务名 `http://browserless:3000`；如果切到外部 Browserless，再显式覆盖这个地址
+- base Compose 默认不会把 `browserless` 暴露到宿主机；如果需要宿主机调试端口，应通过额外 Compose override 单独添加 `ports`
 - Compose 里的 FastAgent child `SANDBOX_URL` 由 `SRT_SERVICE_HOST` 和 owner pool 端口推导，不在 `infra/compose/.env.example` 中单独配置
 - `DATABASE_URL` 和 `INSTANCES_ROOT` 在当前 Compose 文件里固定写成容器内路径，不从 `infra/compose/.env.example` 读取
 - `WECLAWS_DATA_ROOT` 只用于 `docker-compose.prod.yml`；基础 `docker-compose.yml` 继续使用 Docker named volume，不会读取这个变量

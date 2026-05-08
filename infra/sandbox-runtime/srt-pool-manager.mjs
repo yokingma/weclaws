@@ -15,6 +15,8 @@ const DEFAULT_RECONCILE_INTERVAL_MS = 2_000;
 const CURRENT_DIR = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_CHILD_ENTRY = join(CURRENT_DIR, 'srt-child-entry.mjs');
 const SAFE_BASE_ENV_KEYS = [
+  'BROWSERLESS_API_KEY',
+  'BROWSERLESS_API_URL',
   'HOME',
   'LANG',
   'LC_ALL',
