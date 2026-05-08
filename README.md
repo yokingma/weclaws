@@ -24,6 +24,11 @@ WeClaws 是一个可一键部署的微信智能体机器人WEB管理面板。基
 - `@fastagent/sandbox-runtime` 提供按用户隔离的远程执行环境。
 - Supervisor 在后台把网页里的运行意图变成真实 FastAgent 子进程。
 
+<p align="center">
+  <img src="assets/wechat_1.jpg" alt="WeClaws 微信通道应用效果 1" width="48%" />
+  <img src="assets/wechat_2.jpg" alt="WeClaws 微信通道应用效果 2" width="48%" />
+</p>
+
 ## 适合谁
 
 WeClaws 适合想把微信智能体从“手工跑一个命令”升级成“多人、多账号、可持续运维服务”的团队或个人：
