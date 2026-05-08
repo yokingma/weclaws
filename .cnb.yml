@@ -1,0 +1,200 @@
+main:
+  push:
+    web-build-amd64:
+      runner:
+        tags: cnb:arch:amd64
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/web:latest-linux-amd64
+      stages:
+        - name: docker login
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: docker build
+          script: docker build -t "${IMAGE_TAG}" -f infra/docker/web.Dockerfile .
+        - name: docker push
+          script: docker push "${IMAGE_TAG}"
+        - name: resolve
+          type: cnb:resolve
+          options:
+            key: web-build-amd64
+
+    web-build-arm64:
+      runner:
+        tags: cnb:arch:arm64:v8
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/web:latest-linux-arm64
+      stages:
+        - name: docker login
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: docker build
+          script: docker build -t "${IMAGE_TAG}" -f infra/docker/web.Dockerfile .
+        - name: docker push
+          script: docker push "${IMAGE_TAG}"
+        - name: resolve
+          type: cnb:resolve
+          options:
+            key: web-build-arm64
+
+    web-manifest:
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/web:latest
+      stages:
+        - name: await amd64
+          type: cnb:await
+          options:
+            key: web-build-amd64
+        - name: await arm64
+          type: cnb:await
+          options:
+            key: web-build-arm64
+        - name: manifest
+          image: cnbcool/manifest
+          settings:
+            target: ${IMAGE_TAG}
+            template: ${IMAGE_TAG}-OS-ARCH
+            platforms:
+              - linux/amd64
+              - linux/arm64
+
+    supervisor-build-amd64:
+      runner:
+        tags: cnb:arch:amd64
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/supervisor:latest-linux-amd64
+      stages:
+        - name: docker login
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: docker build
+          script: docker build -t "${IMAGE_TAG}" -f infra/docker/supervisor.Dockerfile .
+        - name: docker push
+          script: docker push "${IMAGE_TAG}"
+        - name: resolve
+          type: cnb:resolve
+          options:
+            key: supervisor-build-amd64
+
+    supervisor-build-arm64:
+      runner:
+        tags: cnb:arch:arm64:v8
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/supervisor:latest-linux-arm64
+      stages:
+        - name: docker login
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: docker build
+          script: docker build -t "${IMAGE_TAG}" -f infra/docker/supervisor.Dockerfile .
+        - name: docker push
+          script: docker push "${IMAGE_TAG}"
+        - name: resolve
+          type: cnb:resolve
+          options:
+            key: supervisor-build-arm64
+
+    supervisor-manifest:
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/supervisor:latest
+      stages:
+        - name: await amd64
+          type: cnb:await
+          options:
+            key: supervisor-build-amd64
+        - name: await arm64
+          type: cnb:await
+          options:
+            key: supervisor-build-arm64
+        - name: manifest
+          image: cnbcool/manifest
+          settings:
+            target: ${IMAGE_TAG}
+            template: ${IMAGE_TAG}-OS-ARCH
+            platforms:
+              - linux/amd64
+              - linux/arm64
+
+    sandbox-runtime-build-amd64:
+      runner:
+        tags: cnb:arch:amd64
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/sandbox-runtime:latest-linux-amd64
+        TARGETARCH: amd64
+        AGENT_BROWSER_NPM_VERSION: "0.25.4"
+      stages:
+        - name: docker login
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: docker build
+          script: |
+            docker build \
+              -t "${IMAGE_TAG}" \
+              -f infra/docker/sandbox-runtime.Dockerfile \
+              --build-arg TARGETARCH="${TARGETARCH}" \
+              --build-arg AGENT_BROWSER_NPM_VERSION="${AGENT_BROWSER_NPM_VERSION}" \
+              .
+        - name: docker push
+          script: docker push "${IMAGE_TAG}"
+        - name: resolve
+          type: cnb:resolve
+          options:
+            key: sandbox-runtime-build-amd64
+
+    sandbox-runtime-build-arm64:
+      runner:
+        tags: cnb:arch:arm64:v8
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/sandbox-runtime:latest-linux-arm64
+        TARGETARCH: arm64
+        AGENT_BROWSER_NPM_VERSION: "0.25.4"
+      stages:
+        - name: docker login
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: docker build
+          script: |
+            docker build \
+              -t "${IMAGE_TAG}" \
+              -f infra/docker/sandbox-runtime.Dockerfile \
+              --build-arg TARGETARCH="${TARGETARCH}" \
+              --build-arg AGENT_BROWSER_NPM_VERSION="${AGENT_BROWSER_NPM_VERSION}" \
+              .
+        - name: docker push
+          script: docker push "${IMAGE_TAG}"
+        - name: resolve
+          type: cnb:resolve
+          options:
+            key: sandbox-runtime-build-arm64
+
+    sandbox-runtime-manifest:
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/sandbox-runtime:latest
+      stages:
+        - name: await amd64
+          type: cnb:await
+          options:
+            key: sandbox-runtime-build-amd64
+        - name: await arm64
+          type: cnb:await
+          options:
+            key: sandbox-runtime-build-arm64
+        - name: manifest
+          image: cnbcool/manifest
+          settings:
+            target: ${IMAGE_TAG}
+            template: ${IMAGE_TAG}-OS-ARCH
+            platforms:
+              - linux/amd64
+              - linux/arm64
