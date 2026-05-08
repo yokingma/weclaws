@@ -13,7 +13,9 @@
 </div>
 
 WeClaws 是一个可一键部署的微信智能体机器人WEB管理面板。基于 FastAgent CLI 接入微信对话通道，支持工具调用、技能、MCP、记忆、做梦、定时任务和沙盒执行能力。
-
+<p align="center">
+  <img src="assets/screenshot_1.png" alt="WeClaws Web管理面板截屏" width="100%" />
+</p>
 通过在云端或者本地服务器部署，用户就可以通过网页注册/登录、配置模型服务、创建自己的微信机器人、扫码登录微信，并让机器人长期在线运行。系统内置用户账号、邀请码注册、模型配置、状态实时刷新、机器人生命周期管理和按用户隔离的远程沙盒。
 
 简单说：
@@ -99,6 +101,10 @@ fastagent --channel weixin
 ## 沙盒镜像内置环境
 
 默认 Compose 会构建 `sandbox-runtime` 镜像。镜像里的工具是在构建阶段预装的，方便机器人在远程沙盒里处理常见任务，不需要每个用户重复安装。
+
+<p align="center">
+  <img src="assets/screenshot_2.png" alt="WeClaws 沙盒环境监控截图" width="100%" />
+</p>
 
 当前内置环境包括：
 
