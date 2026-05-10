@@ -5,6 +5,7 @@ const findByIdMock = vi.fn();
 const findByIdForOwnerMock = vi.fn();
 const findProfileByIdForUserMock = vi.fn();
 const listByOwnerUserIdMock = vi.fn();
+const requestQrReissueMock = vi.fn();
 const requestRestartMock = vi.fn();
 const recordRuntimeConfigSnapshotMock = vi.fn();
 const resolveInstancesRootMock = vi.fn();
@@ -37,6 +38,7 @@ vi.mock('../repositories', () => ({
       findByIdForOwner: findByIdForOwnerMock,
       listByOwnerUserId: listByOwnerUserIdMock,
       recordRuntimeConfigSnapshot: recordRuntimeConfigSnapshotMock,
+      requestQrReissue: requestQrReissueMock,
       requestRestart: requestRestartMock,
       setDesiredState: setDesiredStateMock,
       updateLlmConfigBinding: updateLlmConfigBindingMock,
@@ -118,6 +120,7 @@ describe('bot-service DTO mapping', () => {
       processPid: 123,
       processStartedAt: new Date('2026-03-30T00:00:01.000Z'),
       provider: 'anthropic',
+      qrReissueRequestedAt: null,
       restartRequestedAt: new Date('2026-03-30T00:00:06.000Z'),
       status: 'running',
       updatedAt: new Date('2026-03-30T00:00:05.000Z'),
@@ -149,6 +152,7 @@ describe('bot-service DTO mapping', () => {
       processPid: 123,
       processStartedAt: '2026-03-30T00:00:01.000Z',
       provider: 'anthropic',
+      qrReissueRequestedAt: null,
       restartRequestedAt: '2026-03-30T00:00:06.000Z',
       status: 'running',
       updatedAt: '2026-03-30T00:00:05.000Z',
@@ -173,6 +177,7 @@ describe('bot-service DTO mapping', () => {
       processPid: 84721,
       processStartedAt: new Date('2026-03-30T10:18:18.753Z'),
       provider: 'openai',
+      qrReissueRequestedAt: null,
       restartRequestedAt: null,
       status: 'running',
       updatedAt: new Date('2026-03-30T10:18:19.068Z'),
@@ -199,6 +204,7 @@ describe('bot-service DTO mapping', () => {
       processPid: 84721,
       processStartedAt: '2026-03-30T10:18:18.753Z',
       provider: 'openai',
+      qrReissueRequestedAt: null,
       restartRequestedAt: null,
       status: 'running',
       updatedAt: '2026-03-30T10:18:19.068Z',

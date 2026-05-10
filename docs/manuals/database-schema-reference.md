@@ -253,6 +253,7 @@ verifications
 | `restart_count` | 否 | `integer` | 连续重启计数 |
 | `restart_backoff_until` | 是 | `timestamp_ms` | 下次允许重启的最早时间 |
 | `restart_requested_at` | 是 | `timestamp_ms` | 控制面请求重启的时间标记 |
+| `qr_reissue_requested_at` | 是 | `timestamp_ms` | 控制面请求重新扫码/重新出码的时间标记 |
 | `last_qr_code_id` | 是 | `text` | 最近一次二维码 id |
 | `last_qr_code_url` | 是 | `text` | 最近一次二维码图片 URL |
 | `weixin_account_id` | 是 | `text` | 当前登录或恢复出的微信账号 id |
@@ -276,6 +277,38 @@ verifications
 - 当前数据库不再保存 FastAgent binary、workspace/data/log 目录等宿主机绝对路径
 - 这些运行目录统一由 `INSTANCES_ROOT + botId` 在运行时派生
 - `provider / model` 是 bot 最近一次将应用/已应用的 runtime snapshot；当前绑定关系单独由 `llm_config_id` 表示
+- `qr_reissue_requested_at` 是 durable runtime intent；真正停机、清 FastAgent 登录态文件和重新出码由 supervisor 收敛，完成后会清空这个字段并顺带清掉最近二维码与 `weixin_account_id`
+
+### 5.6.1 `bot_qr_shares`
+
+- 表接口：`botQrShares`
+- 文件：`packages/db/src/schema/bot-qr-shares.ts`
+- 主要用途：保存 bot 当前唯一的二维码公开分享链接
+- 主要访问接口：`BotQrShareRepository`
+
+| 字段 | 空值 | 类型 | 说明 |
+| --- | --- | --- | --- |
+| `id` | 否 | `text` | 分享记录主键 |
+| `bot_instance_id` | 否 | `text` | 所属 bot，外键到 `bot_instances.id` |
+| `token` | 否 | `text` | owner 侧恢复公开链接用的原始 token |
+| `token_hash` | 否 | `text` | public lookup 使用的 token hash |
+| `revoked_at` | 是 | `timestamp_ms` | 关闭分享的时间；`null` 表示当前 active |
+| `created_at` | 否 | `timestamp_ms` | 创建时间 |
+| `updated_at` | 否 | `timestamp_ms` | 最近更新时间 |
+
+索引与约束：
+
+- 主键：`id`
+- 唯一索引：`bot_qr_shares_bot_instance_id_idx(bot_instance_id)`
+- 唯一索引：`bot_qr_shares_token_idx(token)`
+- 唯一索引：`bot_qr_shares_token_hash_idx(token_hash)`
+- 普通索引：`bot_qr_shares_revoked_at_idx(revoked_at)`
+- 外键：`bot_instance_id -> bot_instances.id`，`onDelete: cascade`
+
+补充：
+
+- 当前每个 bot 只允许一条 share 记录；rotate link 继续通过 update 同一行完成
+- `token` 和 `token_hash` 当前都会持久化：owner 侧需要直接恢复当前公开链接，public 侧只用 `token_hash` 查询
 
 ### 5.7 `bot_events`
 

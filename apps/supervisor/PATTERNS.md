@@ -4,12 +4,12 @@
 
 - `apps/supervisor` 是唯一的 bot runtime owner
 - 对内 workspace package/import 名称统一使用 `@weclaws/supervisor`、`@weclaws/db`、`@weclaws/shared`
-- web 层只写 `desiredState` / `restartRequestedAt` 命令，不直接起停本地进程
+- web 层只写 `desiredState` / `restartRequestedAt` / `qrReissueRequestedAt` 这类 durable intent，不直接起停本地进程，也不直接删 FastAgent 登录态文件
 - 所有 child process 生命周期和 crash 恢复都由 supervisor 收敛
 
 ## Runtime Flow
 
-- reconcile loop 只消费数据库中的期望状态与 restart marker
+- reconcile loop 只消费数据库中的期望状态、restart marker 和 qr reissue marker
 - stdout JSONL 是唯一机器事件输入；stderr 只做日志，不参与状态机
 - runtime 状态变更统一通过 event applier 落到 `bot_instances` 和 `bot_events`
 - `ProcessManager.startInstance()` 在真正 spawn 前必须先尝试一次 managed skills 同步，但同步失败或锁 busy 不阻断 FastAgent 启动
@@ -18,6 +18,7 @@
 - `ProcessManager.startInstance()` 在拿到本次生效 LLM 配置后，必须先把 `provider / model` runtime 快照写回 `bot_instances`，再继续 spawn；web 展示只认这份快照
 - `ProcessManager.startInstance()` 在 spawn 前阶段如果遇到 bot 级启动失败（例如 binary 不可执行、spawn spec 准备失败），必须记录 supervisor 日志并把该实例收敛成 `failed + FASTAGENT_START_FAILED`；这类失败不能再向外抛到整轮 reconcile
 - 已消费的 restart 请求通过 `status=stopping` 区分于 crash；后续 `stopped` 不进入 backoff，而是等待下一轮 reconcile 立即拉起
+- `qrReissueRequestedAt` 的处理顺序固定为“先停活进程/孤儿进程，再删登录态文件，再 consume intent，再重新启动”；只要清理或停机没完成，就不能提前消费 intent
 - `failed` 不是永久死状态；只要后续写入有效 restart intent，repository 必须先把实例转回可 reconcile 状态，再由 reconcile loop 正常拉起
 - `desired_state=stopped` 的实例如果还停留在 `provisioning` 且尚未拉起 child，也必须在 reconcile 中直接落成稳定 `stopped`
 
@@ -70,6 +71,7 @@
 - `src/runtime/fastagent-cli-contract.ts` 负责 external smoke 所需的 bare / runtime 命令拼装、stdout JSONL 校验，并复用同一套 FastAgent binary 解析/可运行性判断；只有 binary 可执行且 `FASTAGENT_API_KEY`、模型、provider 运行时配置齐备时，真实 smoke 才允许启用
 - `src/runtime/resolve-fastagent-runtime-config.ts` 是 bot 级运行配置的唯一解析入口；它只允许读取 `bot_instances.llm_config_id -> user_llm_profiles`。缺少 `provider / model / apiKey` 时必须抛出 typed error，并让上层把实例收敛成 `failed`
 - `qr_code` 事件必须先通过 shared QR validator；当前只接受 `https://liteapp.weixin.qq.com/q/...`
+- “重新扫码/重新出码”当前依赖删除 `IM_GATEWAY_DATA_DIR` 下的 `accounts-roster.jsonl`、`accounts-runtime.jsonl` 和 `bindings.jsonl`；这些文件的生命周期只允许 supervisor 管理
 - bot 一旦已经记录当前 `processPid`，来自其他 pid 的非 `process_started` 事件必须忽略，避免旧 runtime 的 `qr_code` / `runtime_error` / `stopped` 污染当前状态
 - `runtime_error` 事件优先消费结构化 `data.error` 作为 `lastErrorMessage`，`message` 仅作回退
 - `running` 事件如果自带 `accountId`，event applier 会顺带回填 `weixinAccountId`，用于 restored session 直接进入 steady state 的路径

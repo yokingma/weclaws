@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2026-05-10
+
+### Changed
+
+- bot 列表页现在支持直接点击名称做 inline rename；本地列表状态由 `BotsConsole` 持有，保存继续走 owner-scoped `PATCH /api/bots/[id]`，详情页不再保留独立名称编辑卡片。
+- inline rename 的客户端交互已收口到独立 `BotRenameControl`，避免列表渲染组件继续承载表单副作用。
+- bot 状态卡片新增 `Reissue QR` 动作：web 只写 `POST /api/bots/[id]/reissue-qr` intent，不伪装成微信通道内的真实登出；runtime 后续由 supervisor 停实例、清登录态并重新出码。
+- 新增二维码公开分享闭环：
+  - owner-scoped `GET/POST/DELETE /api/bots/[id]/qr-share`
+  - 公共 `GET /api/share/qr/[token]`
+  - 未登录也可访问的 `/share/qr/[token]` 公开页面
+- owner 侧二维码分享控件已拆成独立 `BotQrShareControls`，状态卡片只保留 runtime 命令、skills 同步和删除动作。
+- 公开二维码页当前按 2 秒轮询最新 bot 状态；同一分享链接会在 bot 重出码后继续返回最新二维码，不需要重新复制新页面地址。
+- 公共 `GET /api/share/qr/[token]` 显式返回 `cache-control: no-store`，避免 QR 状态轮询和 revoke 结果被缓存。
+- `toApiError()` 继续只透传显式 `ApiError`；普通 error-like 对象统一折叠为通用 500，避免泄露底层错误细节。
+
 ## 2026-05-07
 
 ### Changed

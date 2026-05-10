@@ -27,6 +27,7 @@ export const botInstances = sqliteTable(
     restartCount: integer('restart_count').notNull().default(0),
     restartBackoffUntil: integer('restart_backoff_until', { mode: 'timestamp_ms' }),
     restartRequestedAt: integer('restart_requested_at', { mode: 'timestamp_ms' }),
+    qrReissueRequestedAt: integer('qr_reissue_requested_at', { mode: 'timestamp_ms' }),
     lastQrCodeId: text('last_qr_code_id'),
     lastQrCodeUrl: text('last_qr_code_url'),
     weixinAccountId: text('weixin_account_id'),

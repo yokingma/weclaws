@@ -56,12 +56,14 @@
 - `UserLlmProfileRepository` 同样保持窄接口：只允许 owner-scoped `create/list/find/update/delete`；不要在 DB 层引入“解析生效配置”或“批量换绑 bot”这类跨边界逻辑
 - `bot_instances.llm_config_id` 是 bot 当前绑定 profile 的唯一持久化真相；`listByOwnerUserIdAndLlmConfigId()` / `updateLlmConfigBinding()` 用于 profile 级 restart 和换绑收敛，不扩展成通用条件更新
 - `BotInstanceRepository.updateNameForOwner()` 是 Bot 展示名称的唯一修改入口；必须保持 owner-scoped 且只写 `name / updatedAt`，不要扩展成通用 bot patch 接口
+- `BotInstanceRepository.requestQrReissue()` / `consumeQrReissueRequest()` 是二维码重出码 intent 的唯一持久化入口；前者只写 durable intent，且如果命中 `failed` bot 必须先转回可 reconcile 状态，后者在 supervisor 完成 runtime 清理后统一清空 `qrReissueRequestedAt / lastQrCode* / weixinAccountId`
 - restart/backoff/failed 的判定在 supervisor；repository 只负责把已经确定的状态原子写回 SQLite
 - `requestRestart()` 如果命中 `failed` bot，必须把它先转回可 reconcile 状态；“能否再次启动”仍由 supervisor 后续按当前配置和 runtime contract 判断
 - `recordRuntimeConfigSnapshot()` 只负责回写 bot 最近一次将应用的 `provider / model` 快照，不在 DB 层解析用户配置或 env fallback
 - `findReconcileCandidates()` 只返回可启动或可恢复的 `desired_state=running` 实例，`failed` 由人工或后续命令干预
 - `findStopCandidates()` 必须覆盖 `provisioning`，因为 web 创建 bot 后可能在 supervisor 首轮拉起 child 前就收到 stop 命令
 - `markRunning()` 可以消费 `running` 事件里已有的 `accountId`，但只做单字段回填，不把登录/恢复判定逻辑下沉到 repository
+- 二维码公开分享统一走 [`src/schema/bot-qr-shares.ts`](./src/schema/bot-qr-shares.ts) + [`src/repositories/bot-qr-share-repository.ts`](./src/repositories/bot-qr-share-repository.ts)；每个 bot 当前最多只有一条 active share，`upsertActiveByBotInstanceId()` 必须用 SQLite upsert 收敛并发开启请求，`revokeByBotInstanceId()` 没有 active share 时必须返回 `null`，public lookup 只允许按 `token_hash` 命中
 - `bot_instances` / `workspaces` 不持久化任何宿主机绝对路径，包括 FastAgent binary、workspace/data/log 目录
 - runtime 目录结构由 web / supervisor 在 DB 外部派生；repository 只维护逻辑主键、所属关系和 runtime 状态
 - `WorkspaceRepository.deleteById()` 负责删除 bot 所属 workspace，并依赖现有外键级联一起清掉 `bot_instances` / `bot_events`；“只有完全停止的 bot 才允许删除”这类规则继续留在 web 层

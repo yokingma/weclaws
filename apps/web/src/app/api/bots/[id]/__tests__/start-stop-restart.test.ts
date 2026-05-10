@@ -5,6 +5,7 @@ const requireOwnedBotMock = vi.fn();
 const startBotMock = vi.fn();
 const stopBotMock = vi.fn();
 const restartBotMock = vi.fn();
+const requestBotQrReissueMock = vi.fn();
 
 vi.mock('@/lib/session', () => ({
   requireRequestSession: requireRequestSessionMock,
@@ -15,6 +16,7 @@ vi.mock('@/lib/bot-service', () => ({
   startBot: startBotMock,
   stopBot: stopBotMock,
   restartBot: restartBotMock,
+  requestBotQrReissue: requestBotQrReissueMock,
 }));
 
 describe('bot command routes', () => {
@@ -93,6 +95,32 @@ describe('bot command routes', () => {
         id: 'bot_1',
         desiredState: 'running',
         restartRequestedAt: '2026-03-30T00:00:00.000Z',
+      },
+      error: null,
+    });
+  });
+
+  it('records qr reissue requests for the authorized owner', async () => {
+    requestBotQrReissueMock.mockResolvedValue({
+      id: 'bot_1',
+      desiredState: 'running',
+      qrReissueRequestedAt: '2026-05-10T10:00:00.000Z',
+      status: 'running',
+    });
+
+    const { POST } = await import('../reissue-qr/route');
+    const response = await POST(new Request('http://localhost/api/bots/bot_1/reissue-qr'), {
+      params: Promise.resolve({ id: 'bot_1' }),
+    });
+
+    expect(requestBotQrReissueMock).toHaveBeenCalledWith('bot_1');
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      data: {
+        id: 'bot_1',
+        desiredState: 'running',
+        qrReissueRequestedAt: '2026-05-10T10:00:00.000Z',
+        status: 'running',
       },
       error: null,
     });

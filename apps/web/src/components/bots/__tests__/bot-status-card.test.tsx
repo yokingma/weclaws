@@ -43,6 +43,7 @@ it('keeps all actions visible and shows inline errors on failed commands', async
         processStartedAt: null,
         heartbeatAt: null,
         restartRequestedAt: null,
+        qrReissueRequestedAt: null,
         lastQrCodeId: null,
         lastQrCodeUrl: null,
         weixinAccountId: null,
@@ -109,6 +110,7 @@ it('shows sync feedback without mutating the live bot payload', async () => {
         processStartedAt: null,
         heartbeatAt: null,
         restartRequestedAt: null,
+        qrReissueRequestedAt: null,
         lastQrCodeId: null,
         lastQrCodeUrl: null,
         weixinAccountId: null,
@@ -129,6 +131,134 @@ it('shows sync feedback without mutating the live bot payload', async () => {
   });
   expect(onBotUpdated).not.toHaveBeenCalled();
   expect(await screen.findByText('Managed skills synced. 1 conflicting user skill was kept.')).toBeInTheDocument();
+});
+
+it('requests a fresh qr flow without pretending to log out the Weixin account in-place', async () => {
+  const onBotUpdated = vi.fn();
+
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    json: async () => ({
+      data: {
+        id: 'bot_1',
+        name: 'Alpha',
+        llmConfigId: 'profile_1',
+        llmProfileName: 'Primary',
+        provider: 'anthropic',
+        model: 'claude-opus-4-6',
+        workspaceId: 'w1',
+        desiredState: 'running',
+        status: 'running',
+        processPid: 1,
+        processStartedAt: null,
+        heartbeatAt: null,
+        restartRequestedAt: null,
+        qrReissueRequestedAt: '2026-05-10T10:00:00.000Z',
+        lastQrCodeId: null,
+        lastQrCodeUrl: null,
+        weixinAccountId: 'wx_1',
+        lastErrorCode: null,
+        lastErrorMessage: null,
+        createdAt: '',
+        updatedAt: '',
+      },
+      error: null,
+    }),
+    ok: true,
+    status: 200,
+  }));
+
+  renderWithLocale(
+    <BotStatusCard
+      bot={{
+        id: 'bot_1',
+        name: 'Alpha',
+        llmConfigId: 'profile_1',
+        llmProfileName: 'Primary',
+        provider: 'anthropic',
+        model: 'claude-opus-4-6',
+        workspaceId: 'w1',
+        desiredState: 'running',
+        status: 'running',
+        processPid: 1,
+        processStartedAt: null,
+        heartbeatAt: null,
+        restartRequestedAt: null,
+        qrReissueRequestedAt: null,
+        lastQrCodeId: null,
+        lastQrCodeUrl: null,
+        weixinAccountId: 'wx_1',
+        lastErrorCode: null,
+        lastErrorMessage: null,
+        createdAt: '',
+        updatedAt: '',
+      }}
+      onBotUpdated={onBotUpdated}
+    />,
+    { locale: 'en' }
+  );
+
+  await userEvent.click(screen.getByRole('button', { name: 'Reissue QR' }));
+
+  expect(fetch).toHaveBeenCalledWith('/api/bots/bot_1/reissue-qr', {
+    method: 'POST',
+  });
+  expect(onBotUpdated).toHaveBeenCalledWith(expect.objectContaining({
+    qrReissueRequestedAt: '2026-05-10T10:00:00.000Z',
+  }));
+});
+
+it('creates a public qr share link from the runtime card', async () => {
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(new Response(JSON.stringify({
+      data: null,
+      error: null,
+    }), { status: 200 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({
+      data: {
+        publicUrl: 'http://localhost/share/qr/share_token_1',
+        revokedAt: null,
+        shareId: 'share_1',
+      },
+      error: null,
+    }), { status: 200 }));
+  vi.stubGlobal('fetch', fetchMock);
+
+  renderWithLocale(
+    <BotStatusCard
+      bot={{
+        id: 'bot_1',
+        name: 'Alpha',
+        llmConfigId: 'profile_1',
+        llmProfileName: 'Primary',
+        provider: 'anthropic',
+        model: 'claude-opus-4-6',
+        workspaceId: 'w1',
+        desiredState: 'running',
+        status: 'waiting_for_qr',
+        processPid: 1,
+        processStartedAt: null,
+        heartbeatAt: null,
+        restartRequestedAt: null,
+        qrReissueRequestedAt: null,
+        lastQrCodeId: null,
+        lastQrCodeUrl: 'https://liteapp.weixin.qq.com/q/7GiQu1?qrcode=abc&bot_type=3',
+        weixinAccountId: null,
+        lastErrorCode: null,
+        lastErrorMessage: null,
+        createdAt: '',
+        updatedAt: '',
+      }}
+      onBotUpdated={() => {}}
+    />,
+    { locale: 'en' }
+  );
+
+  await userEvent.click(screen.getByRole('button', { name: 'Enable QR Share' }));
+
+  expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/bots/bot_1/qr-share', {
+    method: 'POST',
+  });
+  expect(await screen.findByText('http://localhost/share/qr/share_token_1')).toBeInTheDocument();
 });
 
 it('requires an explicit confirmation button before deleting a stopped bot', async () => {
@@ -159,6 +289,7 @@ it('requires an explicit confirmation button before deleting a stopped bot', asy
         processStartedAt: null,
         heartbeatAt: null,
         restartRequestedAt: null,
+        qrReissueRequestedAt: null,
         lastQrCodeId: null,
         lastQrCodeUrl: null,
         weixinAccountId: null,
@@ -200,6 +331,7 @@ it('moves qr content into runtime summary and removes duplicated status rows', (
         processStartedAt: '2026-04-14T10:00:00.000Z',
         heartbeatAt: '2026-04-14T10:03:00.000Z',
         restartRequestedAt: '2026-04-14T10:04:00.000Z',
+        qrReissueRequestedAt: null,
         lastQrCodeId: 'qr_1',
         lastQrCodeUrl:
           'https://liteapp.weixin.qq.com/q/7GiQu1?qrcode=f20d3207f1db267785bd56467af4f96b&bot_type=3',
@@ -244,6 +376,7 @@ it('hides stale qr content once the bot is already running', () => {
         processStartedAt: '2026-04-14T10:00:00.000Z',
         heartbeatAt: '2026-04-14T10:03:00.000Z',
         restartRequestedAt: '2026-04-14T10:04:00.000Z',
+        qrReissueRequestedAt: null,
         lastQrCodeId: 'qr_1',
         lastQrCodeUrl:
           'https://liteapp.weixin.qq.com/q/7GiQu1?qrcode=f20d3207f1db267785bd56467af4f96b&bot_type=3',

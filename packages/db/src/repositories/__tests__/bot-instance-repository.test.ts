@@ -128,6 +128,10 @@ describe('BotInstanceRepository', () => {
         name: string,
         updatedAt: Date,
       ): Promise<{ id: string; name: string; updatedAt: Date } | null>;
+      requestQrReissue(
+        id: string,
+        requestedAt: Date,
+      ): Promise<{ id: string; desiredState: string; qrReissueRequestedAt: Date | null } | null>;
       findReconcileCandidates(now?: Date): Promise<Array<{ id: string; desiredState: string }>>;
     };
 
@@ -148,6 +152,11 @@ describe('BotInstanceRepository', () => {
       'user_1',
       'Renamed Bot',
       renamedAt,
+    );
+    const qrReissueRequestedAt = new Date('2026-03-30T00:00:03.000Z');
+    const qrReissueRequested = await scopedRepository.requestQrReissue(
+      'bot_1',
+      qrReissueRequestedAt,
     );
     const blockedRename = await scopedRepository.updateNameForOwner(
       'bot_1',
@@ -178,6 +187,11 @@ describe('BotInstanceRepository', () => {
       id: 'bot_1',
       name: 'Renamed Bot',
       updatedAt: renamedAt,
+    });
+    expect(qrReissueRequested).toMatchObject({
+      id: 'bot_1',
+      desiredState: 'running',
+      qrReissueRequestedAt,
     });
     expect(blockedRename).toBeNull();
     expect(runnable).toHaveLength(2);
@@ -241,6 +255,112 @@ describe('BotInstanceRepository', () => {
       desiredState: 'running',
       id: 'bot_1',
       restartRequestedAt,
+      status: 'stopped',
+    });
+    expect(runnable.map((item) => item.id)).toEqual(['bot_1']);
+  });
+
+  it('keeps qr reissue intents owner-agnostic and leaves stop intents untouched', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'weixin-claws-db-qr-reissue-'));
+    tempDirs.push(dir);
+
+    const client = createDatabaseClient({
+      url: `file:${join(dir, 'test.sqlite')}`,
+    });
+    migrateDatabase(client);
+
+    const users = new UserRepository(client.db);
+    const workspaces = new WorkspaceRepository(client.db);
+    const botInstances = new BotInstanceRepository(client.db);
+
+    await users.create({
+      email: 'zac@example.com',
+      id: 'user_1',
+      name: 'zac',
+    });
+
+    await workspaces.create({
+      id: 'ws_1',
+      ownerUserId: 'user_1',
+      name: 'Default Workspace',
+    });
+
+    await botInstances.create({
+      desiredState: 'stopped',
+      id: 'bot_1',
+      model: 'claude-opus-4-6',
+      name: 'Bot One',
+      ownerUserId: 'user_1',
+      provider: 'anthropic',
+      status: 'stopped',
+      workspaceId: 'ws_1',
+    });
+
+    const requestedAt = new Date('2026-03-30T00:00:00.000Z');
+    const requested = await (botInstances as unknown as {
+      requestQrReissue(
+        id: string,
+        requestedAt: Date,
+      ): Promise<{ desiredState: string; qrReissueRequestedAt: Date | null } | null>;
+    }).requestQrReissue('bot_1', requestedAt);
+
+    expect(requested).toMatchObject({
+      desiredState: 'running',
+      qrReissueRequestedAt: requestedAt,
+    });
+  });
+
+  it('re-queues failed bots for reconcile when qr reissue is requested', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'weixin-claws-db-qr-reissue-failed-'));
+    tempDirs.push(dir);
+
+    const client = createDatabaseClient({
+      url: `file:${join(dir, 'test.sqlite')}`,
+    });
+    migrateDatabase(client);
+
+    const users = new UserRepository(client.db);
+    const workspaces = new WorkspaceRepository(client.db);
+    const botInstances = new BotInstanceRepository(client.db);
+
+    await users.create({
+      email: 'zac@example.com',
+      id: 'user_1',
+      name: 'zac',
+    });
+
+    await workspaces.create({
+      id: 'ws_1',
+      ownerUserId: 'user_1',
+      name: 'Default Workspace',
+    });
+
+    await botInstances.create({
+      desiredState: 'running',
+      id: 'bot_1',
+      model: 'claude-opus-4-6',
+      name: 'Bot One',
+      ownerUserId: 'user_1',
+      provider: 'anthropic',
+      status: 'running',
+      workspaceId: 'ws_1',
+    });
+
+    await botInstances.markFailed('bot_1', {
+      errorCode: 'RUNTIME_ERROR',
+      errorMessage: 'FastAgent runtime failed.',
+      failedAt: new Date('2026-03-30T00:00:00.000Z'),
+      restartCount: 1,
+    });
+
+    const requestedAt = new Date('2026-03-30T00:01:00.000Z');
+    const requested = await botInstances.requestQrReissue('bot_1', requestedAt);
+    const runnable = await botInstances.findReconcileCandidates(requestedAt);
+
+    expect(requested).toMatchObject({
+      desiredState: 'running',
+      id: 'bot_1',
+      qrReissueRequestedAt: requestedAt,
       status: 'stopped',
     });
     expect(runnable.map((item) => item.id)).toEqual(['bot_1']);

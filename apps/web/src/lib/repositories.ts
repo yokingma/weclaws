@@ -1,6 +1,7 @@
 import {
   BotEventRepository,
   BotInstanceRepository,
+  BotQrShareRepository,
   RegistrationBootstrapClaimRepository,
   RegistrationInviteRepository,
   UserRepository,
@@ -19,6 +20,7 @@ export interface WebRepositories {
   registrationBootstrapClaims: RegistrationBootstrapClaimRepository;
   workspaces: WorkspaceRepository;
   botInstances: BotInstanceRepository;
+  botQrShares: BotQrShareRepository;
   botEvents: BotEventRepository;
   registrationInvites: RegistrationInviteRepository;
 }
@@ -50,6 +52,7 @@ export function getRepositories(): WebRepositories {
     registrationBootstrapClaims: new RegistrationBootstrapClaimRepository(client.db),
     workspaces: new WorkspaceRepository(client.db),
     botInstances: new BotInstanceRepository(client.db),
+    botQrShares: new BotQrShareRepository(client.db),
     botEvents: new BotEventRepository(client.db),
     registrationInvites: new RegistrationInviteRepository(client.db),
   };

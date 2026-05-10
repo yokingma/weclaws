@@ -4,6 +4,7 @@ export { accounts } from './accounts';
 export { verifications } from './verifications';
 export { workspaces } from './workspaces';
 export { botInstances } from './bot-instances';
+export { botQrShares } from './bot-qr-shares';
 export { botEvents } from './bot-events';
 export { registrationBootstrapClaims } from './registration-bootstrap-claims';
 export { registrationInvites } from './registration-invites';

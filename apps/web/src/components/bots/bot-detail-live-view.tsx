@@ -5,7 +5,6 @@ import { useLocale } from '@/components/providers/locale-provider';
 import { ErrorNotice } from '@/components/ui/error-notice';
 import type { BotDetailItem, BotEventItem } from '@/lib/bot-service';
 import type { LlmProfileItem } from '@/lib/llm-profiles';
-import { BotBasicInfoCard } from './bot-basic-info-card';
 import { BotDetailHeader } from './bot-detail-header';
 import { BotEventsList } from './bot-events-list';
 import { BotLlmProfileCard } from './bot-llm-profile-card';
@@ -67,12 +66,6 @@ export function BotDetailLiveView({ initialBot, initialEvents, profiles }: BotDe
       {streamErrorMessage ? <ErrorNotice>{streamErrorMessage}</ErrorNotice> : null}
       <div className="grid gap-6 xl:grid-cols-[minmax(20rem,0.95fr)_minmax(0,1.05fr)]">
         <aside aria-label={t((messages) => messages.botDetail.controlsRegion)} className="grid content-start gap-6">
-          <BotBasicInfoCard
-            bot={bot}
-            onBotUpdated={(nextBot) => {
-              setBot(nextBot);
-            }}
-          />
           <BotStatusCard
             bot={bot}
             onBotUpdated={(nextBot) => {

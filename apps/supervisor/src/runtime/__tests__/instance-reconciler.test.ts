@@ -228,6 +228,62 @@ describe('InstanceReconciler', () => {
     await processManager.dispose();
   });
 
+  it('stops a logged-in runtime, clears FastAgent login state, and re-enters qr wait on qr reissue', async () => {
+    const { botInstances, config, processManager, reconciler } = await createReconcilerHarness({
+      binaryScenario: 'stateful_restore_or_qr',
+    });
+    const instancePaths = resolveBotInstancePaths(config.instancesRoot, 'bot_1');
+    const requestedAt = new Date('2026-03-30T00:00:10.000Z');
+
+    await seedLoginStateFiles(instancePaths.dataDir);
+    await reconciler.runOnce(new Date('2026-03-30T00:00:00.000Z'));
+
+    await waitFor(async () => {
+      const current = await botInstances.findById('bot_1');
+      return current?.status === 'running'
+        && current.weixinAccountId === RESTORED_ACCOUNT_ID
+        && processManager.hasInstance('bot_1');
+    });
+
+    await botInstances.requestQrReissue('bot_1', requestedAt);
+    await reconciler.runOnce(new Date('2026-03-30T00:00:11.000Z'));
+
+    const stoppingBot = await botInstances.findById('bot_1');
+    expect(stoppingBot).toMatchObject({
+      qrReissueRequestedAt: requestedAt,
+      status: 'stopping',
+      weixinAccountId: RESTORED_ACCOUNT_ID,
+    });
+
+    await waitFor(async () => {
+      const current = await botInstances.findById('bot_1');
+      return current?.status === 'stopped' && !processManager.hasInstance('bot_1');
+    });
+
+    await expectLoginStatePresent(instancePaths.dataDir);
+
+    await reconciler.runOnce(new Date('2026-03-30T00:00:12.000Z'));
+
+    await waitFor(async () => {
+      const current = await botInstances.findById('bot_1');
+      return current?.status === 'waiting_for_qr'
+        && current.qrReissueRequestedAt === null
+        && current.weixinAccountId === null
+        && typeof current.lastQrCodeUrl === 'string'
+        && processManager.hasInstance('bot_1');
+    });
+
+    const qrBot = await botInstances.findById('bot_1');
+    expect(qrBot).toMatchObject({
+      qrReissueRequestedAt: null,
+      status: 'waiting_for_qr',
+      weixinAccountId: null,
+    });
+    await expectLoginStateMissing(instancePaths.dataDir);
+
+    await processManager.dispose();
+  }, 15_000);
+
   it('terminates orphaned live processes before restarting desired running instances after supervisor loss', async () => {
     const {
       botInstances,
@@ -447,6 +503,28 @@ async function waitFor(predicate: () => Promise<boolean>, timeoutMs: number = 5_
   }
 
   throw new Error('Timed out waiting for condition.');
+}
+
+async function seedLoginStateFiles(dataDir: string) {
+  await Promise.all([
+    writeFile(join(dataDir, 'accounts-roster.jsonl'), '{"accountId":"restored_acc_1"}\n'),
+    writeFile(join(dataDir, 'accounts-runtime.jsonl'), '{"accountId":"restored_acc_1"}\n'),
+    writeFile(join(dataDir, 'bindings.jsonl'), '{"peerId":"wx_user_1"}\n'),
+  ]);
+}
+
+async function expectLoginStatePresent(dataDir: string) {
+  await Promise.all([
+    access(join(dataDir, 'accounts-roster.jsonl')),
+    access(join(dataDir, 'accounts-runtime.jsonl')),
+    access(join(dataDir, 'bindings.jsonl')),
+  ]);
+}
+
+async function expectLoginStateMissing(dataDir: string) {
+  await expect(access(join(dataDir, 'accounts-roster.jsonl'))).rejects.toThrow();
+  await expect(access(join(dataDir, 'accounts-runtime.jsonl'))).rejects.toThrow();
+  await expect(access(join(dataDir, 'bindings.jsonl'))).rejects.toThrow();
 }
 
 async function spawnOrphanedFastAgent(config: SupervisorConfig, botInstanceId: string) {

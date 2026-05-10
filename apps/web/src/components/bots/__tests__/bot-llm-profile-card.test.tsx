@@ -51,6 +51,7 @@ const bot = {
   processStartedAt: null,
   provider: 'openai',
   restartRequestedAt: null,
+  qrReissueRequestedAt: null,
   status: 'running' as const,
   updatedAt: '',
   weixinAccountId: null,

@@ -17,16 +17,6 @@ export class ApiError extends Error implements ApiErrorShape {
   }
 }
 
-interface ErrorLike {
-  code?: unknown;
-  message?: unknown;
-  status?: unknown;
-}
-
-function isErrorLike(error: unknown): error is ErrorLike {
-  return typeof error === 'object' && error !== null;
-}
-
 export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) {
     return error;

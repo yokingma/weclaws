@@ -26,6 +26,10 @@ class BotInstanceRepositoryMock {
   constructor(readonly db: object) {}
 }
 
+class BotQrShareRepositoryMock {
+  constructor(readonly db: object) {}
+}
+
 class BotEventRepositoryMock {
   constructor(readonly db: object) {}
 }
@@ -41,6 +45,7 @@ class UserSandboxRuntimePoolRepositoryMock {
 vi.mock('@weclaws/db', () => ({
   BotEventRepository: BotEventRepositoryMock,
   BotInstanceRepository: BotInstanceRepositoryMock,
+  BotQrShareRepository: BotQrShareRepositoryMock,
   RegistrationBootstrapClaimRepository: RegistrationBootstrapClaimRepositoryMock,
   RegistrationInviteRepository: RegistrationInviteRepositoryMock,
   UserLlmProfileRepository: UserLlmProfileRepositoryMock,
@@ -86,6 +91,7 @@ describe('getRepositories', () => {
 
     expect(repositories.workspaces).toBeInstanceOf(WorkspaceRepositoryMock);
     expect(typeof repositories.workspaces.deleteById).toBe('function');
+    expect(repositories.botQrShares).toBeInstanceOf(BotQrShareRepositoryMock);
     expect(repositories.userSandboxRuntimePools).toBeInstanceOf(UserSandboxRuntimePoolRepositoryMock);
   });
 });

@@ -22,10 +22,15 @@
 - `GET /api/bots`
 - `POST /api/bots`
 - `GET /api/bots/{id}`
+- `PATCH /api/bots/{id}`
 - `DELETE /api/bots/{id}`
 - `POST /api/bots/{id}/start`
 - `POST /api/bots/{id}/stop`
 - `POST /api/bots/{id}/restart`
+- `POST /api/bots/{id}/reissue-qr`
+- `GET /api/bots/{id}/qr-share`
+- `POST /api/bots/{id}/qr-share`
+- `DELETE /api/bots/{id}/qr-share`
 - `PATCH /api/bots/{id}/llm-profile`
 - `POST /api/bots/{id}/skills/sync`
 - `GET /api/bots/{id}/events`
@@ -36,6 +41,10 @@
 - `DELETE /api/settings/llm-profiles/{profileId}`
 
 以上 bot 路由都要求已登录 session，且只能访问自己的 bot。
+
+下面这个路由当前是公开路由，不要求 WeClaws 登录态：
+
+- `GET /api/share/qr/{token}`
 
 下面这些管理路由要求管理员身份：
 
@@ -305,6 +314,7 @@ Better Auth 原生入口。
     "processStartedAt": null,
     "heartbeatAt": null,
     "restartRequestedAt": null,
+    "qrReissueRequestedAt": null,
     "lastQrCodeId": null,
     "lastQrCodeUrl": null,
     "weixinAccountId": null,
@@ -342,7 +352,32 @@ Better Auth 原生入口。
 - 返回里的 `provider` / `model` 展示 bot 当前的 runtime 快照；这份快照会在 create-bot、profile 换绑和每次 supervisor spawn 前刷新，不会随着 profile 后续编辑而立即漂移
 - `llmConfigId` 表示 bot 当前绑定的 profile id；`llmProfileName` 是 owner-scoped hydration 后的展示名
 
-### 4.3.1 `DELETE /api/bots/{id}`
+### 4.3.1 `PATCH /api/bots/{id}`
+
+#### 描述
+
+修改单个 bot 的展示名称。
+
+#### 请求体
+
+```json
+{
+  "name": "Renamed Bot"
+}
+```
+
+#### 当前行为
+
+- 只允许 bot owner 调用
+- `name` 会先 trim，空字符串返回 `400 VALIDATION_ERROR`
+- 当前只更新 `bot_instances.name / updated_at`
+- 不会触发 restart intent，也不会修改 LLM profile 绑定或 runtime 快照
+
+#### 成功响应
+
+返回完整 `BotDetailItem`。
+
+### 4.3.2 `DELETE /api/bots/{id}`
 
 #### 描述
 
@@ -424,7 +459,78 @@ Better Auth 原生入口。
 
 返回完整 `BotDetailItem`，其中 `restartRequestedAt` 会被写入当前时间。
 
-### 4.6.1 `PATCH /api/bots/{id}/llm-profile`
+### 4.6.1 `POST /api/bots/{id}/reissue-qr`
+
+#### 描述
+
+请求当前 bot 重新出二维码。
+
+#### 当前行为
+
+- 只允许 bot owner 调用
+- web 侧只写入 `qrReissueRequestedAt`
+- 这不是微信通道内的真实 logout；实际停进程、清登录态、重新出码由 supervisor 后续 reconcile 收敛
+- 成功响应里的 `qrReissueRequestedAt` 会是当前请求时间
+
+#### 成功响应
+
+返回完整 `BotDetailItem`。
+
+### 4.6.2 `GET|POST|DELETE /api/bots/{id}/qr-share`
+
+#### 描述
+
+读取、创建或关闭当前 bot 的二维码公开分享链接。
+
+#### 当前行为
+
+- 只允许 bot owner 调用
+- 每个 bot 当前最多只有一条 active share
+- `POST` 会生成新的 token，并返回同一 bot 当前有效的公开链接
+- `DELETE` 会 revoke 当前 active share；如果当前没有 active share，返回 `data: null`
+
+#### owner 响应体
+
+```json
+{
+  "data": {
+    "shareId": "share_123",
+    "publicUrl": "https://app.example.com/share/qr/token_123",
+    "revokedAt": null
+  },
+  "error": null
+}
+```
+
+### 4.6.3 `GET /api/share/qr/{token}`
+
+#### 描述
+
+公开读取当前二维码分享状态。
+
+#### 当前行为
+
+- 当前不要求 WeClaws 登录态
+- 只暴露最小公开信息：分享 id、bot 当前状态、最后更新时间、以及“如果 bot 正在等待扫码时”的二维码 URL
+- 当 bot 当前不是 `waiting_for_qr` 时，`qrCodeUrl` 返回 `null`
+- 对应公开页面是 `/share/qr/{token}`；前端当前按 2 秒轮询这个 API，分享链接本身不需要因二维码刷新而变化
+- 响应必须携带 `cache-control: no-store`，避免公开二维码状态和 revoked token 结果被缓存
+
+#### 成功响应
+
+```json
+{
+  "data": {
+    "shareId": "share_123",
+    "status": "waiting_for_qr",
+    "qrCodeUrl": "https://liteapp.weixin.qq.com/q/7GiQu1?qrcode=abc&bot_type=3",
+    "updatedAt": "2026-05-10T10:00:00.000Z"
+  },
+  "error": null
+}
+```
+
+### 4.6.4 `PATCH /api/bots/{id}/llm-profile`
 
 #### 描述
 

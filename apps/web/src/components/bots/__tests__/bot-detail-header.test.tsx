@@ -29,6 +29,7 @@ it('renders one merged summary surface for current runtime status and technical 
         processStartedAt: '2026-04-08T10:00:00.000Z',
         heartbeatAt: '2026-04-08T10:02:00.000Z',
         restartRequestedAt: null,
+        qrReissueRequestedAt: null,
         lastQrCodeId: null,
         lastQrCodeUrl: null,
         weixinAccountId: 'wx_alpha',

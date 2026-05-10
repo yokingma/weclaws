@@ -175,6 +175,7 @@ export class BotInstanceRepository {
 
     return this.updateById(id, {
       desiredState: 'running',
+      qrReissueRequestedAt: null,
       restartBackoffUntil: null,
       restartRequestedAt: requestedAt,
       ...(current.status === 'failed'
@@ -208,6 +209,27 @@ export class BotInstanceRepository {
       .run();
 
     return this.findByIdForOwner(id, ownerUserId);
+  }
+
+  async requestQrReissue(id: string, requestedAt: Date = new Date()) {
+    const current = await this.findById(id);
+
+    if (!current) {
+      return null;
+    }
+
+    return this.updateById(id, {
+      desiredState: 'running',
+      qrReissueRequestedAt: requestedAt,
+      restartBackoffUntil: null,
+      restartRequestedAt: null,
+      ...(current.status === 'failed'
+        ? {
+          status: 'stopped' as const,
+        }
+        : {}),
+      updatedAt: requestedAt,
+    });
   }
 
   async findReconcileCandidates(now: Date = new Date()) {
@@ -331,6 +353,16 @@ export class BotInstanceRepository {
     return this.updateById(id, {
       restartRequestedAt: null,
       updatedAt: input.consumedAt,
+    });
+  }
+
+  async consumeQrReissueRequest(id: string, consumedAt: Date = new Date()) {
+    return this.updateById(id, {
+      lastQrCodeId: null,
+      lastQrCodeUrl: null,
+      qrReissueRequestedAt: null,
+      updatedAt: consumedAt,
+      weixinAccountId: null,
     });
   }
 

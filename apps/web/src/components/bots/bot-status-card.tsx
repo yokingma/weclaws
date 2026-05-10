@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ErrorNotice } from '@/components/ui/error-notice';
 import { LocalizedDateTime } from '@/components/ui/localized-date-time';
 import type { BotDetailItem } from '@/lib/bot-service';
+import { BotQrShareControls } from './bot-qr-share-controls';
 import { QrCodePanel } from './qr-code-panel';
 
 interface BotStatusCardProps {
@@ -50,16 +51,24 @@ interface SyncSkillsResponse {
   } | null;
 }
 
-type BotAction = 'delete' | 'restart' | 'start' | 'stop' | 'sync-skills';
+type BotAction =
+  | 'delete'
+  | 'reissue-qr'
+  | 'restart'
+  | 'start'
+  | 'stop'
+  | 'sync-skills';
 
 export function BotStatusCard({ bot, onBotUpdated }: BotStatusCardProps) {
   const router = useRouter();
   const { locale, t } = useLocale();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
+  const [isQrSharePending, setIsQrSharePending] = useState(false);
   const [pendingAction, setPendingAction] = useState<BotAction | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const isActionDisabled = isPending || isQrSharePending;
   const unavailable = t((messages) => messages.common.unavailable);
   const canDeleteBot = bot.desiredState === 'stopped' && bot.status === 'stopped' && bot.processPid === null;
   const shouldShowQr = bot.status === 'waiting_for_qr';
@@ -143,6 +152,32 @@ export function BotStatusCard({ bot, onBotUpdated }: BotStatusCardProps) {
     });
   };
 
+  const runQrReissue = () => {
+    setErrorMessage(null);
+    setSyncMessage(null);
+    setPendingAction('reissue-qr');
+
+    startTransition(async () => {
+      try {
+        const response = await fetch(`/api/bots/${bot.id}/reissue-qr`, {
+          method: 'POST',
+        });
+        const payload = (await response.json()) as BotCommandResponse;
+
+        if (!response.ok || !payload.data) {
+          setErrorMessage(payload.error?.message ?? t((messages) => messages.botDetail.reissueQrFailed));
+          return;
+        }
+
+        onBotUpdated(payload.data);
+      } catch {
+        setErrorMessage(t((messages) => messages.botDetail.reissueQrFailed));
+      } finally {
+        setPendingAction(null);
+      }
+    });
+  };
+
   const rows = [
     {
       label: t((messages) => messages.botDetail.processStarted),
@@ -185,17 +220,16 @@ export function BotStatusCard({ bot, onBotUpdated }: BotStatusCardProps) {
             {syncMessage}
           </p>
         ) : null}
-
         <div className="grid gap-2 sm:grid-cols-2">
-          <Button className="w-full" disabled={isPending} onClick={() => runCommand('start')} type="button">
+          <Button className="w-full" disabled={isActionDisabled} onClick={() => runCommand('start')} type="button">
             {getActionLabel('start', isPending, pendingAction, t((messages) => messages.botDetail.start))}
           </Button>
-          <Button className="w-full" disabled={isPending} onClick={() => runCommand('stop')} type="button" variant="muted">
+          <Button className="w-full" disabled={isActionDisabled} onClick={() => runCommand('stop')} type="button" variant="muted">
             {getActionLabel('stop', isPending, pendingAction, t((messages) => messages.botDetail.stop))}
           </Button>
           <Button
             className="w-full"
-            disabled={isPending}
+            disabled={isActionDisabled}
             onClick={() => runCommand('restart')}
             type="button"
             variant="outline"
@@ -204,7 +238,21 @@ export function BotStatusCard({ bot, onBotUpdated }: BotStatusCardProps) {
           </Button>
           <Button
             className="w-full"
-            disabled={isPending}
+            disabled={isActionDisabled}
+            onClick={runQrReissue}
+            type="button"
+            variant="outline"
+          >
+            {getActionLabel(
+              'reissue-qr',
+              isPending,
+              pendingAction,
+              t((messages) => messages.botDetail.reissueQr),
+            )}
+          </Button>
+          <Button
+            className="w-full"
+            disabled={isActionDisabled}
             onClick={runSkillsSync}
             type="button"
             variant="outline"
@@ -222,6 +270,12 @@ export function BotStatusCard({ bot, onBotUpdated }: BotStatusCardProps) {
           {t((messages) => messages.botDetail.syncSkillsNotice)}
         </p>
 
+        <BotQrShareControls
+          botId={bot.id}
+          disabled={isPending}
+          onPendingChange={setIsQrSharePending}
+        />
+
         <div className="grid gap-3 rounded-[1.2rem] border border-destructive/20 bg-destructive/5 px-4 py-4">
           <p className="m-0 text-xs text-[color:var(--text-soft)]">
             {t((messages) => messages.botDetail.deleteNotice)}
@@ -230,7 +284,7 @@ export function BotStatusCard({ bot, onBotUpdated }: BotStatusCardProps) {
             <div className="grid gap-2 sm:grid-cols-2">
               <Button
                 className="w-full"
-                disabled={isPending || !canDeleteBot}
+                disabled={isActionDisabled || !canDeleteBot}
                 onClick={runDelete}
                 type="button"
                 variant="destructive"
@@ -244,7 +298,7 @@ export function BotStatusCard({ bot, onBotUpdated }: BotStatusCardProps) {
               </Button>
               <Button
                 className="w-full"
-                disabled={isPending}
+                disabled={isActionDisabled}
                 onClick={() => setIsDeleteConfirming(false)}
                 type="button"
                 variant="outline"
@@ -255,7 +309,7 @@ export function BotStatusCard({ bot, onBotUpdated }: BotStatusCardProps) {
           ) : (
             <Button
               className="w-full"
-              disabled={isPending || !canDeleteBot}
+              disabled={isActionDisabled || !canDeleteBot}
               onClick={() => setIsDeleteConfirming(true)}
               type="button"
               variant="destructive"

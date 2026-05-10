@@ -13,6 +13,7 @@ import {
 import type { SupervisorConfig } from '../config';
 import { applyFastAgentEvent } from './event-applier';
 import { createFastAgentEventReader } from './event-reader';
+import { clearBotLoginState } from './clear-bot-login-state';
 import { ProcessRegistry } from './process-registry';
 import {
   spawnFastAgentProcess,
@@ -64,6 +65,13 @@ export class ProcessManager {
 
   hasInstance(botInstanceId: string) {
     return this.registry.has(botInstanceId);
+  }
+
+  async clearInstanceLoginState(botInstanceId: string) {
+    await clearBotLoginState({
+      botInstanceId,
+      instancesRoot: this.config.instancesRoot,
+    });
   }
 
   async startInstance(botInstance: SpawnableBotInstance, options: StartInstanceOptions = {}) {

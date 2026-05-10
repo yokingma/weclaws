@@ -74,6 +74,7 @@
 - Route Handlers 不直接操作 DB repository 细节，也不触发任何本地进程
 - [`src/lib/repositories.ts`](./src/lib/repositories.ts) 只缓存 DB client，不缓存 repository 实例；`next dev` 热更新后必须重新拿当前 class 定义，避免全局旧实例缺少新增 repository 方法
 - bot 创建、状态切换、restart marker 写入统一收敛在 [`src/lib/bot-service.ts`](./src/lib/bot-service.ts)
+- bot 重出码 intent 也收敛在 [`src/lib/bot-service.ts`](./src/lib/bot-service.ts) 的 `requestBotQrReissue()`；web 只写 `qrReissueRequestedAt`，不直接碰实例目录或 FastAgent 登录态文件
 - `createBot()` 负责同时创建实例目录、workspace 记录和 bot instance 记录
 - `WEB_USER_BOT_LIMIT` 是可选的全局“每用户 Bot 数量上限”；空值或 `0` 表示不限，正整数表示 owner-scoped hard limit
 - `createBot()` 在真正建目录/写库前可以先按 owner 统计当前 Bot 数量做快速失败，但最终的 `WEB_USER_BOT_LIMIT` 硬限制必须在同一个 SQLite `immediate` 事务里完成“owner 计数 + 限额判断 + 插入”，避免并发创建越过上限；达到上限时统一返回 `409 BOT_LIMIT_REACHED`
@@ -83,6 +84,7 @@
 - `resolveInstancesRoot()` 的解析必须尊重显式 `INSTANCES_ROOT` override；不能再硬编码 `storage/instances`，否则会和 supervisor 漂移
 - 手动 skills 同步不进 `bot-service`；route 直接调用 shared managed skills 引擎，因为它不写 bot 意图，也不触碰 runtime 生命周期
 - Bot 名称编辑统一走 `PATCH /api/bots/[id]` + [`src/lib/bot-service.ts`](./src/lib/bot-service.ts) 的 owner-scoped `updateBotName()`；只允许更新展示名称，不触发 restart intent，不修改 profile 绑定，也不改 `provider / model` runtime 快照
+- Bot 二维码分享统一走 [`src/lib/bot-qr-share-service.ts`](./src/lib/bot-qr-share-service.ts)；owner 侧持有当前公开链接，public 侧只允许用 token-hash 读最小二维码状态，不直接暴露 bot owner 或其它 runtime 细节；公开轮询 API 必须显式 `no-store`
 - bot DTO 显式拆为：
   - `BotSummaryItem`：列表页最小字段
   - `BotDetailItem`：详情页、命令响应、SSE 快照/状态更新字段
@@ -108,7 +110,8 @@
 - `/bots` 页面保持服务端取数、客户端筛选的分层：
   - route page 只负责 session + `listBots()` + 顶部 header
   - [`src/components/bots/bots-console.tsx`](./src/components/bots/bots-console.tsx) 持有搜索词、runtime status filter 和空状态分支
-  - [`src/components/bots/bot-list.tsx`](./src/components/bots/bot-list.tsx) 只负责结果渲染，不再持有数据获取和筛选逻辑
+  - [`src/components/bots/bot-list.tsx`](./src/components/bots/bot-list.tsx) 只负责结果渲染和 inline rename 交互，不再持有数据获取和筛选逻辑
+- 列表页重命名是当前唯一的 Bot 名称编辑入口：点击名称进入 input，`Enter` 保存、`Escape` 取消；保存成功后由 `BotsConsole` 只更新本地目标 bot，不刷新整个列表；具体表单副作用收敛在 [`src/components/bots/bot-rename-control.tsx`](./src/components/bots/bot-rename-control.tsx)
 - 登录后全局工具区统一收敛到 [`src/components/layout/console-toolbar.tsx`](./src/components/layout/console-toolbar.tsx)，只承载移动端菜单入口、主题切换和语言切换；桌面品牌展示收口到左 rail，不再在顶部重复放 logo
 - 浏览器元数据、左 rail 与认证页都应显示 `WeClaws` 品牌；对内 package/import 名称统一使用 `weclaws` / `@weclaws/*`
 - 顶部工具条只承载全局工具和管理员入口，不再渲染账号邮箱；账号身份与会话动作统一放在 [`src/components/layout/account-menu.tsx`](./src/components/layout/account-menu.tsx)
@@ -170,15 +173,16 @@
 ## Detail Presentation
 
 - [`src/components/bots/bot-detail-live-view.tsx`](./src/components/bots/bot-detail-live-view.tsx) 继续作为详情页唯一的 EventSource owner，子组件只消费 props，不自行开流
-- [`src/components/bots/bot-basic-info-card.tsx`](./src/components/bots/bot-basic-info-card.tsx) 负责 Bot 展示名称编辑；成功后只更新 live view 的本地 `BotDetailItem`，runtime 状态仍由 SSE/命令响应收敛
 - 详情页头部现在先渲染 bot 身份摘要，再在同一张横向 summary surface 内并排呈现 `当前运行状态` 和 `技术元数据`；不要再把 metadata 作为独立正文卡片放回主工作区
 - 详情页工作区现在固定为“双栏主次结构”：
   - 左栏是 `Bot Controls` complementary region，用于合并后的 `运行概览`、命令按钮和删除入口
   - 右栏是 `Live Activity` region，用于最近事件
 - [`src/components/bots/bot-status-card.tsx`](./src/components/bots/bot-status-card.tsx) 保留 `Start` / `Stop` / `Restart` 三个按钮始终可见；只在请求进行中统一禁用，不做 runtime 乐观更新
+- [`src/components/bots/bot-status-card.tsx`](./src/components/bots/bot-status-card.tsx) 现在承担 `Reissue QR` 入口：`Reissue QR` 只写 runtime intent；二维码分享开关和复制链接收敛到 [`src/components/bots/bot-qr-share-controls.tsx`](./src/components/bots/bot-qr-share-controls.tsx)，统一走 owner-scoped `/api/bots/[id]/qr-share`
 - [`src/components/bots/bot-status-card.tsx`](./src/components/bots/bot-status-card.tsx) 现在额外提供 `Sync Skills` 按钮，只同步托管 `data/skills`，并以内联反馈展示成功 / busy / 非阻断错误
 - [`src/components/bots/bot-status-card.tsx`](./src/components/bots/bot-status-card.tsx) 现在还承担 bot 删除入口；删除只允许在 `desiredState=stopped`、`status=stopped`、`processPid=null` 时启用，并且必须经过 inline `Delete Bot -> Confirm Delete` 两步确认，成功后返回 `/bots`
 - 详情页二维码只在 `status=waiting_for_qr` 时展示；即使数据库里仍保留最近一次 `lastQrCode*`，bot 进入 `running` / `degraded` / `stopped` 后也不能继续把旧二维码展示给用户
+- 公开二维码页统一走 [`src/components/bots/public-qr-share-view.tsx`](./src/components/bots/public-qr-share-view.tsx)；该页面不要求 WeClaws 登录态，只轮询公开 `GET /api/share/qr/[token]` 并渲染当前最新二维码
 - `运行概览` 卡片不再重复渲染头部已经展示过的 `status / desiredState / heartbeat / process state / latest error` 等字段；二维码内容直接内嵌到卡片顶部，独立二维码卡片与额外小标题块都移除
 - bot 详情页里的 `返回 Bots` 按钮保持右对齐
 - 删除 bot 时，实例目录清理是 best-effort；如果 DB 级删除已经成功，目录清理失败只能记日志，不能把接口整体打成 `500`

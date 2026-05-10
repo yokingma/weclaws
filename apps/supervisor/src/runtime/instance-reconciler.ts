@@ -42,6 +42,36 @@ export class InstanceReconciler {
             return;
           }
 
+          if (latest.qrReissueRequestedAt) {
+            if (this.processManager.hasInstance(latest.id)) {
+              if (latest.status !== 'stopping') {
+                await this.botInstances.markStopping(latest.id, {
+                  heartbeatAt: now,
+                });
+              }
+
+              await this.processManager.stopInstance(latest.id);
+              return;
+            }
+
+            const persistedProcessHandled = await this.reconcilePersistedProcess(latest.id, latest, now);
+
+            if (persistedProcessHandled) {
+              return;
+            }
+
+            await this.processManager.clearInstanceLoginState(latest.id);
+
+            const reissuedBot = await this.botInstances.consumeQrReissueRequest(latest.id, now);
+
+            if (!reissuedBot) {
+              return;
+            }
+
+            await this.processManager.startInstance(reissuedBot);
+            return;
+          }
+
           if (latest.restartRequestedAt) {
             await this.botInstances.consumeRestartRequest(latest.id, {
               consumedAt: now,

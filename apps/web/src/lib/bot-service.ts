@@ -29,6 +29,7 @@ export interface BotDetailItem extends BotSummaryItem {
   processStartedAt: string | null;
   heartbeatAt: string | null;
   restartRequestedAt: string | null;
+  qrReissueRequestedAt: string | null;
   lastQrCodeId: string | null;
   lastQrCodeUrl: string | null;
   weixinAccountId: string | null;
@@ -278,6 +279,20 @@ export async function restartBot(botId: string): Promise<BotDetailItem> {
   return hydrateBotDetail(bot);
 }
 
+export async function requestBotQrReissue(botId: string): Promise<BotDetailItem> {
+  const bot = await getRepositories().botInstances.requestQrReissue(botId, new Date());
+
+  if (!bot) {
+    throw new ApiError({
+      code: 'NOT_FOUND',
+      message: 'Bot not found.',
+      status: 404,
+    });
+  }
+
+  return hydrateBotDetail(bot);
+}
+
 export async function deleteBot(botId: string): Promise<DeleteBotResult> {
   const repositories = getRepositories();
   const bot = await repositories.botInstances.findById(botId);
@@ -420,6 +435,7 @@ interface BotPersistenceRecord {
   processStartedAt: Date | null;
   heartbeatAt: Date | null;
   restartRequestedAt: Date | null;
+  qrReissueRequestedAt: Date | null;
   lastQrCodeId: string | null;
   lastQrCodeUrl: string | null;
   weixinAccountId: string | null;
@@ -452,6 +468,7 @@ function toBotDetailItem(bot: BotPersistenceRecord): BotDetailItem {
     processStartedAt: toIsoString(bot.processStartedAt),
     heartbeatAt: toIsoString(bot.heartbeatAt),
     restartRequestedAt: toIsoString(bot.restartRequestedAt),
+    qrReissueRequestedAt: toIsoString(bot.qrReissueRequestedAt),
     lastQrCodeId: bot.lastQrCodeId,
     lastQrCodeUrl: bot.lastQrCodeUrl,
     weixinAccountId: bot.weixinAccountId,

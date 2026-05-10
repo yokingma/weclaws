@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BOT_STATUSES } from '@weclaws/shared';
 import { EmptyState } from '@/components/layout/empty-state';
@@ -21,6 +21,7 @@ type RuntimeFilterValue = 'all' | 'unknown' | (typeof BOT_STATUSES)[number];
 
 export function BotsConsole({ bots, quota }: BotsConsoleProps) {
   const { locale, t } = useLocale();
+  const [botItems, setBotItems] = useState(bots);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<RuntimeFilterValue>('all');
   const quotaSummary = quota.limit === null
@@ -31,9 +32,13 @@ export function BotsConsole({ bots, quota }: BotsConsoleProps) {
       usedCount: quota.usedCount,
     });
 
+  useEffect(() => {
+    setBotItems(bots);
+  }, [bots]);
+
   const presentStatuses = new Set<string>();
 
-  for (const bot of bots) {
+  for (const bot of botItems) {
     presentStatuses.add(normalizeStatus(bot.status));
   }
 
@@ -57,7 +62,7 @@ export function BotsConsole({ bots, quota }: BotsConsoleProps) {
   ];
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
-  const filteredBots = bots.filter((bot) => {
+  const filteredBots = botItems.filter((bot) => {
     const matchesStatus = statusFilter === 'all' ? true : normalizeStatus(bot.status) === statusFilter;
     const matchesSearch =
       normalizedSearch.length === 0
@@ -67,7 +72,7 @@ export function BotsConsole({ bots, quota }: BotsConsoleProps) {
     return matchesStatus && matchesSearch;
   });
 
-  if (bots.length === 0) {
+  if (botItems.length === 0) {
     return (
       <div className="grid gap-6">
         <div className="rounded-[1.45rem] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)]/82 px-5 py-4 text-sm leading-6 text-muted-foreground shadow-[var(--shadow-soft)]">
@@ -91,7 +96,7 @@ export function BotsConsole({ bots, quota }: BotsConsoleProps) {
       <div className="rounded-[1.45rem] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)]/82 px-5 py-4 text-sm leading-6 text-muted-foreground shadow-[var(--shadow-soft)]">
         {quotaSummary}
       </div>
-      <BotOverviewStats bots={bots} />
+      <BotOverviewStats bots={botItems} />
       <div className="grid gap-5">
         <BotFilterBar
           onSearchQueryChange={setSearchQuery}
@@ -101,7 +106,12 @@ export function BotsConsole({ bots, quota }: BotsConsoleProps) {
           statusOptions={statusOptions}
         />
         {filteredBots.length > 0 ? (
-          <BotList bots={filteredBots} />
+          <BotList
+            bots={filteredBots}
+            onBotUpdated={(nextBot) => {
+              setBotItems((currentBots) => currentBots.map((bot) => (bot.id === nextBot.id ? nextBot : bot)));
+            }}
+          />
         ) : (
           <EmptyState
             description={t((messages) => messages.botsList.noResultsDescription)}

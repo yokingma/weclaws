@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 2026-05-10
+
+### Changed
+
+- `bot_instances` 新增 `qr_reissue_requested_at` 字段与 `BotInstanceRepository.requestQrReissue()/consumeQrReissueRequest()`，用于持久化“重新扫码/重新出码” intent，并在 runtime 完成清理后清空最近二维码和微信账号事实；failed bot 收到 reissue intent 时会先转回可 reconcile 状态。
+- 新增 `bot_qr_shares` 表与 migration `0006_mighty_tyrannus`，用于保存每个 bot 当前唯一的二维码公开分享记录。
+- 新增 `BotQrShareRepository`：
+  - `upsertActiveByBotInstanceId()`
+  - `findByBotInstanceId()`
+  - `findActiveByBotInstanceId()`
+  - `findActiveByTokenHash()`
+  - `revokeByBotInstanceId()`
+
+### Notes
+
+- 当前 `bot_qr_shares` 同时保存 `token` 和 `token_hash`：owner 侧需要直接恢复当前公开链接，public lookup 继续只按 hash 命中。
+- `BotQrShareRepository.upsertActiveByBotInstanceId()` 使用 SQLite upsert 收敛同一 bot 的并发分享开启请求，避免唯一索引冲突冒泡成 500。
+- `BotQrShareRepository.revokeByBotInstanceId()` 只返回本次真正 revoke 的 active share；没有 active share 时返回 `null`，避免 revoked 旧链接被当成有效状态继续向上冒泡。
+
 ## 2026-05-07
 
 ### Changed
