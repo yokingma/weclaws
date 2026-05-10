@@ -12,6 +12,9 @@ const DEFAULT_CONFIG_FILE = '/app/storage/sandbox-runtime-private/srt-pools.json
 const DEFAULT_STATUS_FILE = '/app/storage/sandbox-runtime-private/srt-pool-status.json';
 const DEFAULT_MANAGER_PORT = 8788;
 const DEFAULT_RECONCILE_INTERVAL_MS = 2_000;
+const DEFAULT_CHILD_HEALTH_STARTUP_GRACE_MS = 10_000;
+const DEFAULT_CHILD_HEALTH_TIMEOUT_MS = 1_500;
+const DEFAULT_STOP_GRACE_MS = 3_000;
 const CURRENT_DIR = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_CHILD_ENTRY = join(CURRENT_DIR, 'srt-child-entry.mjs');
 const SAFE_BASE_ENV_KEYS = [
@@ -51,7 +54,7 @@ export async function startSandboxRuntimePoolManager(options = {}) {
   };
 
   await reconcileFromFile();
-  const healthServer = startHealthServer(managerPort);
+  const healthServer = startHealthServer(managerPort, manager);
   const interval = setInterval(() => {
     void reconcileFromFile();
   }, options.reconcileIntervalMs ?? DEFAULT_RECONCILE_INTERVAL_MS);
@@ -81,83 +84,136 @@ export function createSandboxRuntimePoolManager(options = {}) {
   const childEntryPath = options.childEntryPath ?? DEFAULT_CHILD_ENTRY;
   const statusFilePath = options.statusFilePath ?? process.env.SRT_POOL_STATUS_FILE ?? DEFAULT_STATUS_FILE;
   const now = options.now ?? (() => new Date());
-
-  return {
+  const childHealthStartupGraceMs = options.childHealthStartupGraceMs ?? DEFAULT_CHILD_HEALTH_STARTUP_GRACE_MS;
+  const childHealthTimeoutMs = options.childHealthTimeoutMs ?? DEFAULT_CHILD_HEALTH_TIMEOUT_MS;
+  const fetchPoolStatus = options.fetchPoolStatus ?? fetchPoolStatusOverHttp;
+  const stopGraceMs = options.stopGraceMs ?? DEFAULT_STOP_GRACE_MS;
+  let operationQueue = Promise.resolve();
+  let lastStatusDocument = createStatusDocument({
     children,
-    async reconcilePools(document) {
-      const pools = Array.isArray(document?.pools) ? document.pools : [];
-      const desiredOwnerIds = new Set(pools.map((pool) => pool.ownerUserId));
+    lastErrorMessage: null,
+    now: now().toISOString(),
+    pools: [],
+  });
 
-      for (const [ownerUserId, managedChild] of children.entries()) {
-        if (!desiredOwnerIds.has(ownerUserId)) {
-          stopManagedChild(managedChild);
-          children.delete(ownerUserId);
-        }
-      }
-
-      for (const pool of pools) {
-        const existing = children.get(pool.ownerUserId);
-
-        if (!pool.enabled) {
-          if (existing) {
-            stopManagedChild(existing);
-            children.delete(pool.ownerUserId);
-          }
-          continue;
-        }
-
-        const configHash = hashPoolConfig(pool);
-        if (existing && existing.configHash === configHash && existing.child.exitCode === null && !existing.child.killed) {
-          continue;
-        }
-
-        if (existing) {
-          stopManagedChild(existing);
-          children.delete(pool.ownerUserId);
-        }
-
-        const child = spawnProcess(process.execPath, [childEntryPath], {
-          env: buildChildEnv(pool, process.env),
-          stdio: ['ignore', 'inherit', 'inherit'],
-        });
-        const managedChild = {
-          child,
-          configHash,
-          lastErrorMessage: null,
-          lastExitCode: null,
-          lastHealthAt: null,
-          lastRestartAt: pool.restartRequestedAt,
-          ownerUserId: pool.ownerUserId,
-          resourceUsage: null,
-          startedAt: now().toISOString(),
-        };
-
-        child.on?.('exit', (exitCode) => {
-          managedChild.lastExitCode = exitCode;
-        });
-        children.set(pool.ownerUserId, managedChild);
-      }
-
-      await collectResources(children);
-      await this.writeStatus(pools, null);
+  const manager = {
+    children,
+    reconcilePools(document) {
+      return serializeOperation(() => runReconcilePools(document));
     },
-    async stopAll() {
-      for (const managedChild of children.values()) {
-        stopManagedChild(managedChild);
-      }
-      children.clear();
-      await this.writeStatus([], null);
+    stopAll() {
+      return serializeOperation(runStopAll);
     },
-    async writeStatus(pools, lastErrorMessage) {
-      const timestamp = now().toISOString();
-      await writeStatusFile(statusFilePath, createStatusDocument({
-        children,
-        lastErrorMessage,
-        now: timestamp,
-        pools,
-      }));
+    getHealthSummary() {
+      return lastStatusDocument.manager;
+    },
+    writeStatus(pools, lastErrorMessage) {
+      return serializeOperation(() => writeStatus(pools, lastErrorMessage));
     },
   };
+
+  return manager;
+
+  function serializeOperation(operation) {
+    const nextOperation = operationQueue.catch(() => {}).then(operation);
+    operationQueue = nextOperation.catch(() => {});
+    return nextOperation;
+  }
+
+  async function runReconcilePools(document) {
+    const pools = Array.isArray(document?.pools) ? document.pools : [];
+    const desiredOwnerIds = new Set(pools.map((pool) => pool.ownerUserId));
+
+    for (const [ownerUserId, managedChild] of children.entries()) {
+      if (!desiredOwnerIds.has(ownerUserId)) {
+        await stopManagedChild(managedChild, { stopGraceMs });
+        children.delete(ownerUserId);
+      }
+    }
+
+    for (const pool of pools) {
+      const existing = children.get(pool.ownerUserId);
+
+      if (!pool.enabled) {
+        if (existing) {
+          await stopManagedChild(existing, { stopGraceMs });
+          children.delete(pool.ownerUserId);
+        }
+        continue;
+      }
+
+      const configHash = hashPoolConfig(pool);
+      if (existing && existing.configHash === configHash && isManagedChildRunning(existing)) {
+        const healthy = await refreshManagedChildHealth(existing, pool, {
+          childHealthStartupGraceMs,
+          childHealthTimeoutMs,
+          fetchPoolStatus,
+          now,
+        });
+
+        if (healthy) {
+          continue;
+        }
+      }
+
+      if (existing) {
+        await stopManagedChild(existing, { stopGraceMs });
+        children.delete(pool.ownerUserId);
+      }
+
+      const child = spawnProcess(process.execPath, [childEntryPath], {
+        env: buildChildEnv(pool, process.env),
+        stdio: ['ignore', 'inherit', 'inherit'],
+      });
+      const managedChild = {
+        child,
+        configHash,
+        lastErrorMessage: null,
+        lastExitCode: null,
+        lastHealthAt: null,
+        lastRestartAt: pool.restartRequestedAt,
+        ownerUserId: pool.ownerUserId,
+        poolStats: null,
+        resourceUsage: null,
+        startedAt: now().toISOString(),
+        state: 'starting',
+      };
+
+      child.on?.('exit', (exitCode) => {
+        managedChild.lastExitCode = exitCode;
+        managedChild.state = 'stopped';
+      });
+      children.set(pool.ownerUserId, managedChild);
+      await refreshManagedChildHealth(managedChild, pool, {
+        childHealthStartupGraceMs,
+        childHealthTimeoutMs,
+        fetchPoolStatus,
+        now,
+      });
+    }
+
+    await collectResources(children);
+    await writeStatus(pools, null);
+  }
+
+  async function runStopAll() {
+    for (const managedChild of children.values()) {
+      await stopManagedChild(managedChild, { stopGraceMs });
+    }
+    children.clear();
+    await writeStatus([], null);
+  }
+
+  async function writeStatus(pools, lastErrorMessage) {
+    const timestamp = now().toISOString();
+    lastStatusDocument = createStatusDocument({
+      children,
+      lastErrorMessage,
+      now: timestamp,
+      pools,
+    });
+    await writeStatusFile(statusFilePath, lastStatusDocument);
+  }
 }
 
 export function buildChildEnv(pool, baseEnv = process.env) {
@@ -204,11 +260,12 @@ export async function readPoolConfig(configFilePath) {
   }
 }
 
-export function startHealthServer(port) {
+export function startHealthServer(port, manager = null) {
   const server = http.createServer((request, response) => {
     if (request.url === '/health') {
+      const healthSummary = manager?.getHealthSummary?.() ?? { state: 'starting' };
       response.writeHead(200, { 'content-type': 'application/json' });
-      response.end(JSON.stringify({ ok: true }));
+      response.end(JSON.stringify(healthSummary));
       return;
     }
 
@@ -242,6 +299,99 @@ async function collectResources(children) {
       managedChild.resourceUsage,
     );
   }));
+}
+
+async function refreshManagedChildHealth(managedChild, pool, options) {
+  if (!isManagedChildRunning(managedChild)) {
+    managedChild.state = 'stopped';
+    return false;
+  }
+
+  try {
+    const status = await options.fetchPoolStatus(pool, { timeoutMs: options.childHealthTimeoutMs });
+    managedChild.lastErrorMessage = null;
+    managedChild.lastHealthAt = options.now().toISOString();
+    managedChild.poolStats = normalizePoolStats(status?.stats);
+    managedChild.state = status?.initialized !== false && status?.shuttingDown !== true
+      ? 'running'
+      : getStartupState(managedChild, options);
+    return managedChild.state === 'running' || managedChild.state === 'starting';
+  } catch (error) {
+    managedChild.lastErrorMessage = error instanceof Error ? error.message : String(error);
+    managedChild.poolStats = null;
+    managedChild.state = getStartupState(managedChild, options);
+    return managedChild.state === 'starting';
+  }
+}
+
+function getStartupState(managedChild, options) {
+  return isWithinStartupGrace(managedChild, options) ? 'starting' : 'degraded';
+}
+
+function isWithinStartupGrace(managedChild, options) {
+  const startedAtMs = Date.parse(managedChild.startedAt);
+  if (!Number.isFinite(startedAtMs)) {
+    return false;
+  }
+
+  return options.now().getTime() - startedAtMs < options.childHealthStartupGraceMs;
+}
+
+function normalizePoolStats(stats) {
+  return {
+    activeSessions: normalizeNonNegativeInteger(stats?.activeSessions),
+    busyProcesses: normalizeNonNegativeInteger(stats?.busyProcesses),
+    readyProcesses: normalizeNonNegativeInteger(stats?.readyProcesses),
+  };
+}
+
+function normalizeNonNegativeInteger(value) {
+  return Number.isInteger(value) && value >= 0 ? value : null;
+}
+
+function fetchPoolStatusOverHttp(pool, options) {
+  return new Promise((resolve, reject) => {
+    const request = http.get({
+      headers: {
+        'x-api-key': pool.apiKey,
+      },
+      hostname: '127.0.0.1',
+      path: '/pool/status',
+      port: pool.port,
+      timeout: options.timeoutMs,
+    }, (response) => {
+      let body = '';
+      response.setEncoding('utf8');
+      response.on('data', (chunk) => {
+        body += chunk;
+      });
+      response.on('end', () => {
+        if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300) {
+          reject(new Error(`Pool status probe failed with HTTP ${response.statusCode ?? 'unknown'}`));
+          return;
+        }
+
+        try {
+          resolve(JSON.parse(body));
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+
+    request.on('timeout', () => {
+      request.destroy(new Error(`Pool status probe timed out after ${options.timeoutMs}ms`));
+    });
+    request.on('error', reject);
+  });
+}
+
+function isManagedChildRunning(managedChild) {
+  return !hasChildExited(managedChild.child);
+}
+
+function hasChildExited(child) {
+  return child.exitCode != null || child.signalCode != null;
 }
 
 function hashPoolConfig(pool) {
@@ -278,8 +428,47 @@ function pickBaseEnv(baseEnv) {
   );
 }
 
-function stopManagedChild(managedChild) {
-  if (managedChild.child.exitCode === null && !managedChild.child.killed) {
-    managedChild.child.kill('SIGTERM');
+async function stopManagedChild(managedChild, options) {
+  if (!isManagedChildRunning(managedChild)) {
+    managedChild.state = 'stopped';
+    return;
   }
+
+  managedChild.state = 'stopping';
+  managedChild.child.kill('SIGTERM');
+
+  const exitedGracefully = await waitForChildExit(managedChild.child, options.stopGraceMs);
+  if (!exitedGracefully && isManagedChildRunning(managedChild)) {
+    managedChild.child.kill('SIGKILL');
+    await waitForChildExit(managedChild.child, options.stopGraceMs);
+  }
+
+  managedChild.state = isManagedChildRunning(managedChild) ? 'failed' : 'stopped';
+}
+
+function waitForChildExit(child, timeoutMs) {
+  if (hasChildExited(child)) {
+    return Promise.resolve(true);
+  }
+
+  return new Promise((resolve) => {
+    let timer = null;
+    const handleExit = () => {
+      cleanup();
+      resolve(true);
+    };
+    const cleanup = () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      child.off?.('exit', handleExit);
+      child.removeListener?.('exit', handleExit);
+    };
+
+    child.once?.('exit', handleExit);
+    timer = setTimeout(() => {
+      cleanup();
+      resolve(hasChildExited(child));
+    }, timeoutMs);
+  });
 }

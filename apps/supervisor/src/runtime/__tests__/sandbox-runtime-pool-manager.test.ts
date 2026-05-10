@@ -5,11 +5,12 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 // @ts-expect-error repo-local ESM manager has no TS declaration surface
-import { buildChildEnv, createSandboxRuntimePoolManager } from '../../../../../infra/sandbox-runtime/srt-pool-manager.mjs';
+import { buildChildEnv, createSandboxRuntimePoolManager, startHealthServer } from '../../../../../infra/sandbox-runtime/srt-pool-manager.mjs';
 
 const tempDirs: string[] = [];
 
 afterEach(async () => {
+  vi.useRealTimers();
   await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
 });
 
@@ -32,6 +33,41 @@ describe('sandbox-runtime pool manager entrypoints', () => {
 });
 
 describe('sandbox-runtime pool manager', () => {
+  it('serves aggregate manager health instead of a static ok response', async () => {
+    const server = startHealthServer(0, {
+      getHealthSummary: () => ({
+        degradedPoolCount: 1,
+        failedPoolCount: 0,
+        managedPoolCount: 2,
+        runningPoolCount: 1,
+        state: 'degraded',
+      }),
+    });
+    await new Promise<void>((resolve) => {
+      server.once('listening', resolve);
+    });
+
+    try {
+      const address = server.address();
+      if (!address || typeof address === 'string') {
+        throw new Error('Expected health server to listen on a TCP address');
+      }
+      const response = await fetch(`http://127.0.0.1:${address.port}/health`);
+      const body = await response.json() as Record<string, unknown>;
+
+      expect(response.status).toBe(200);
+      expect(body).toMatchObject({
+        degradedPoolCount: 1,
+        managedPoolCount: 2,
+        runningPoolCount: 1,
+        state: 'degraded',
+      });
+      expect(body).not.toEqual({ ok: true });
+    } finally {
+      server.close();
+    }
+  });
+
   it('builds child env from one pool without leaking global sandbox credentials', () => {
     const env = buildChildEnv(createPoolFixture(), {
       API_KEY: 'global-key',
@@ -125,6 +161,165 @@ describe('sandbox-runtime pool manager', () => {
       state: 'stopped',
     });
   });
+
+  it('probes child pool status and writes real health fields', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'weixin-claws-srt-manager-health-'));
+    tempDirs.push(dir);
+
+    const children: FakeChild[] = [];
+    const manager = createSandboxRuntimePoolManager({
+      fetchPoolStatus: vi.fn().mockResolvedValue({
+        initialized: true,
+        shuttingDown: false,
+        stats: {
+          activeSessions: 2,
+          busyProcesses: 1,
+          readyProcesses: 2,
+        },
+      }),
+      now: () => new Date('2026-05-02T00:00:00.000Z'),
+      spawnProcess: () => {
+        const child = new FakeChild(200 + children.length);
+        children.push(child);
+        return child;
+      },
+      statusFilePath: join(dir, 'srt-pool-status.json'),
+    });
+
+    await manager.reconcilePools({
+      pools: [createPoolFixture()],
+      updatedAt: '2026-05-02T00:00:00.000Z',
+      version: 1,
+    });
+
+    const status = JSON.parse(await readFile(join(dir, 'srt-pool-status.json'), 'utf8')) as {
+      manager: { degradedPoolCount: number; runningPoolCount: number };
+      pools: Array<{
+        activeSessions: number | null;
+        busyProcesses: number | null;
+        lastHealthAt: string | null;
+        readyProcesses: number | null;
+        state: string;
+      }>;
+    };
+
+    expect(status.manager.degradedPoolCount).toBe(0);
+    expect(status.manager.runningPoolCount).toBe(1);
+    expect(status.pools[0]).toMatchObject({
+      activeSessions: 2,
+      busyProcesses: 1,
+      lastHealthAt: '2026-05-02T00:00:00.000Z',
+      readyProcesses: 2,
+      state: 'running',
+    });
+  });
+
+  it('restarts a running child when health probing fails outside the startup grace window', async () => {
+    const children: FakeChild[] = [];
+    const fetchPoolStatus = vi
+      .fn()
+      .mockResolvedValueOnce({
+        initialized: true,
+        shuttingDown: false,
+        stats: { activeSessions: 0, busyProcesses: 0, readyProcesses: 1 },
+      })
+      .mockRejectedValueOnce(new Error('connection refused'));
+    const manager = createSandboxRuntimePoolManager({
+      childHealthStartupGraceMs: 0,
+      fetchPoolStatus,
+      now: () => new Date('2026-05-02T00:00:00.000Z'),
+      spawnProcess: () => {
+        const child = new FakeChild(300 + children.length);
+        children.push(child);
+        return child;
+      },
+      statusFilePath: join(awaitTempStatusDir(), 'srt-pool-status.json'),
+    });
+
+    const document = {
+      pools: [createPoolFixture()],
+      updatedAt: '2026-05-02T00:00:00.000Z',
+      version: 1,
+    };
+
+    await manager.reconcilePools(document);
+    await manager.reconcilePools(document);
+
+    expect(children).toHaveLength(2);
+    expect(children[0].kill).toHaveBeenCalledWith('SIGTERM');
+  });
+
+  it('serializes concurrent reconciles so one restart intent only replaces one child once', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'weixin-claws-srt-manager-concurrent-'));
+    tempDirs.push(dir);
+
+    const children: FakeChild[] = [];
+    const manager = createSandboxRuntimePoolManager({
+      fetchPoolStatus: vi.fn().mockResolvedValue({
+        initialized: true,
+        shuttingDown: false,
+        stats: { activeSessions: 0, busyProcesses: 0, readyProcesses: 1 },
+      }),
+      now: () => new Date('2026-05-02T00:00:00.000Z'),
+      spawnProcess: () => {
+        const child = new FakeChild(500 + children.length, { exitDelayMs: children.length === 0 ? 10 : 0 });
+        children.push(child);
+        return child;
+      },
+      statusFilePath: join(dir, 'srt-pool-status.json'),
+    });
+
+    await manager.reconcilePools({
+      pools: [createPoolFixture()],
+      updatedAt: '2026-05-02T00:00:00.000Z',
+      version: 1,
+    });
+
+    const restartDocument = {
+      pools: [createPoolFixture({ restartRequestedAt: '2026-05-02T00:01:00.000Z' })],
+      updatedAt: '2026-05-02T00:01:00.000Z',
+      version: 1,
+    };
+
+    await Promise.all([
+      manager.reconcilePools(restartDocument),
+      manager.reconcilePools(restartDocument),
+    ]);
+
+    expect(children).toHaveLength(2);
+    expect(children[0].kill).toHaveBeenCalledTimes(1);
+    expect(children[0].kill).toHaveBeenCalledWith('SIGTERM');
+    expect(children[1].kill).not.toHaveBeenCalled();
+  });
+
+  it('force kills a child that ignores graceful shutdown', async () => {
+    vi.useFakeTimers();
+    const stubbornChild = new FakeChild(400, { exitOnSignal: false });
+    const manager = createSandboxRuntimePoolManager({
+      spawnProcess: () => stubbornChild,
+      statusFilePath: join(awaitTempStatusDir(), 'srt-pool-status.json'),
+      stopGraceMs: 5,
+    });
+
+    await manager.reconcilePools({
+      pools: [createPoolFixture()],
+      updatedAt: '2026-05-02T00:00:00.000Z',
+      version: 1,
+    });
+
+    const stopPromise = manager.reconcilePools({
+      pools: [],
+      updatedAt: '2026-05-02T00:01:00.000Z',
+      version: 1,
+    });
+
+    await vi.advanceTimersByTimeAsync(5);
+    stubbornChild.emitExit(0);
+    await stopPromise;
+
+    expect(stubbornChild.kill).toHaveBeenCalledWith('SIGTERM');
+    expect(stubbornChild.kill).toHaveBeenCalledWith('SIGKILL');
+  });
 });
 
 class FakeChild extends EventEmitter {
@@ -132,16 +327,39 @@ class FakeChild extends EventEmitter {
   killed = false;
   exitCode: number | null = null;
   pid: number;
+  private readonly exitDelayMs: number;
+  private readonly exitOnSignal: boolean;
 
-  constructor(pid: number) {
+  constructor(pid: number, options: { exitDelayMs?: number; exitOnSignal?: boolean } = {}) {
     super();
+    this.exitDelayMs = options.exitDelayMs ?? 0;
+    this.exitOnSignal = options.exitOnSignal ?? true;
     this.pid = pid;
-    this.kill.mockImplementation(() => {
+    this.kill.mockImplementation((signal: NodeJS.Signals) => {
       this.killed = true;
-      this.exitCode = 0;
+      if (this.exitOnSignal || signal === 'SIGKILL') {
+        if (this.exitDelayMs > 0) {
+          setTimeout(() => {
+            this.emitExit(0);
+          }, this.exitDelayMs);
+        } else {
+          this.emitExit(0);
+        }
+      }
       return true;
     });
   }
+
+  emitExit(exitCode: number) {
+    this.exitCode = exitCode;
+    this.emit('exit', exitCode);
+  }
+}
+
+function awaitTempStatusDir() {
+  const dir = join(tmpdir(), `weixin-claws-srt-manager-${Date.now()}-${Math.random()}`);
+  tempDirs.push(dir);
+  return dir;
 }
 
 function createPoolFixture(overrides: Record<string, unknown> = {}) {

@@ -4,6 +4,10 @@
 
 ### Changed
 
+- sandbox-runtime manager 的 `/health` 现在返回聚合后的 manager/pool 状态，不再只返回静态 `{"ok":true}`。
+- sandbox-runtime manager 在 reconcile 时会探测每个 per-user SRT child 的 `/pool/status`，把 `activeSessions`、`busyProcesses`、`readyProcesses` 和 `lastHealthAt` 写入 `srt-pool-status.json`；启动宽限期后探活失败的 child 会被重启。
+- sandbox-runtime manager 停 child 时会先发 `SIGTERM` 并等待宽限期，未退出时再发 `SIGKILL`，避免僵住的 child 长期假活。
+- sandbox-runtime manager 现在会串行执行 reconcile / stopAll，并用 UUID status 临时文件名做原子写入，避免 interval 与 file watcher 并发触发时重复重启同一 pool 或写坏 `srt-pool-status.json`。
 - reconcile 现在会消费 `bot_instances.qr_reissue_requested_at`：如果 bot 仍在运行，supervisor 先标记 `stopping` 并停掉当前 child；child 完全停稳后，再清理 FastAgent 登录态文件并重新拉起出码链路。
 - 新增 runtime 登录态清理步骤，当前固定清掉 `IM_GATEWAY_DATA_DIR` 下的 `accounts-roster.jsonl`、`accounts-runtime.jsonl` 和 `bindings.jsonl`，用于“重新扫码/重新出码”而不是微信通道内真实 logout。
 - 新增 integration-style reconcile 回归测试，锁住“已登录 runtime 触发 Reissue QR 后会重新回到 `waiting_for_qr`”的行为。

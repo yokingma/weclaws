@@ -94,6 +94,10 @@
 - Compose 的 per-user SRT 默认基线固定为 `SRT_DEFAULT_POOL_SIZE=3`、`SRT_DEFAULT_SESSION_TIMEOUT_MS=600000`、`SRT_DEFAULT_MIN_READY_PROCESSES=1`、`SRT_DEFAULT_MAX_CONCURRENT_INIT=1`；这些默认值必须同时注入 `web` 和 `supervisor`，避免注册时建出的 pool 与 supervisor 渲染期漂移
 - Compose 默认还会提供 `browserless` sidecar 作为受支持的远程浏览器后端；浏览器自动化的产品路径固定为 `sandbox-runtime` 内的 `agent-browser -p browserless` 连接 sidecar，不再支持在 nested sandbox 内直接 launch 本地 Chromium
 - repo-local `sandbox-runtime` 镜像入口固定走 `infra/sandbox-runtime/entry.mjs` manager；manager 读取 `srt-pools.json`，按 enabled user pool 启停 `srt-child-entry.mjs`
+- sandbox-runtime manager 的 `/health` 必须返回最近一次 `srt-pool-status.json` 同源的聚合状态；单个 user pool `starting` / `degraded` / `failed` 时 manager 可以保持 HTTP 200，但 body 里的 `state` 必须反映降级。
+- sandbox-runtime manager 判断 per-user SRT child 是否可复用时，不能只看 Node child process 是否存在；必须探测 child `/pool/status` 并把 pool stats 与 `lastHealthAt` 写入 status 文件，启动宽限期后探活失败必须重启 child。
+- sandbox-runtime manager 停 per-user SRT child 必须先 `SIGTERM`、等待退出宽限期、再用 `SIGKILL` 兜底；`child.killed` 只能表示信号已发送，不能当作进程已退出。
+- sandbox-runtime manager 的 reconcile / stopAll 必须在 manager 进程内串行执行；interval、file watcher 或 shutdown 不能并发修改 `children` map，也不能并发写同一个 status 临时文件。
 - `srt-child-entry.mjs` 是唯一允许启动 `SandboxAPI` 的子进程入口；它会读取 `SANDBOX_WORKSPACE_MAP_FILE`，把对外 session root 固定成 `/workspace`，并在命令执行前把虚拟 cwd 翻译回真实 bot `workspace` / `data`
 - child wrapper 还会通过 `NODE_OPTIONS=--import=.../worker-bootstrap.mjs` 给 sandbox worker 预加载 WeClaws bootstrap；这个 bootstrap 只负责在 Linux 下把当前 session 的 `allowWrite` 根追加回最终 bwrap 参数，避免对 `storageRoot`、`instancesRoot`、`SRT_WORKSPACE_BASE_ROOT`、pool `basePath` 等父级目录的 deny 重新把当前 bot 压成只读
 - Linux writable rebind 只能插在最终 bwrap argv 的 filesystem bind 阶段末尾、PID namespace 阶段之前；不能简单按 `--` 分隔符回插，否则会把 `--bind` 放到 `--unshare-pid` / `--proc` 之后，直接打坏真实命令执行链
