@@ -46,7 +46,8 @@
 说明：
 
 - `agent-browser` 已进入托管同步清单，`sandbox-runtime` 镜像也预置了 `agent-browser`。
-- 默认 Compose 部署现在会额外提供 `browserless` sidecar；托管技能里的首选运行路径是 `agent-browser -p browserless`，而不是在 nested sandbox 内直接 launch 本地浏览器。
+- 默认 Compose 部署现在会额外提供 `browserless` sidecar；托管技能里的受支持运行路径只有 `agent-browser -p browserless` 和显式远程 `--cdp`，不允许在 nested sandbox 或宿主机内直接 launch 本地浏览器。
+- Browserless 在当前仓库里首先是远程浏览器后端；一次性截图、PDF、scrape 这类 one-shot 任务可以直接使用 Browserless，但当前仍统一收口在 `agent-browser` skill 下说明，不单独拆托管 skill。
 
 ## 4. 同步时机
 
@@ -106,7 +107,6 @@ storage/instances/<botId>/
 - `python3`
 - `ffmpeg`
 - `agent-browser`
-- Chromium
 - Browserless sidecar（默认 Compose 部署）
 
 技能是否真正可用仍取决于运行环境和用户授权。例如：

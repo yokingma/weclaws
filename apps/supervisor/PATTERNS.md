@@ -92,7 +92,9 @@
 - `sandbox-runtime` 镜像里的 `bun` 必须安装在 sandbox session 可见的系统路径（当前固定 `/usr/local/bin`）；不要再装到 `/root/.bun/bin`，因为 remote sandbox 本身会 deny `/root`
 - Linux `amd64` 上的 `bun` 必须固定使用官方 `linux-x64-baseline` 资产，而不是让安装脚本按构建机 CPU 自动挑版本；否则镜像如果在支持 AVX2 的 builder 上构建，部署到不支持 AVX2 的老 x64 CPU 会直接 `Illegal instruction` / core dump
 - Compose 的 per-user SRT 默认基线固定为 `SRT_DEFAULT_POOL_SIZE=3`、`SRT_DEFAULT_SESSION_TIMEOUT_MS=600000`、`SRT_DEFAULT_MIN_READY_PROCESSES=1`、`SRT_DEFAULT_MAX_CONCURRENT_INIT=1`；这些默认值必须同时注入 `web` 和 `supervisor`，避免注册时建出的 pool 与 supervisor 渲染期漂移
-- Compose 默认还会提供 `browserless` sidecar 作为受支持的远程浏览器后端；浏览器自动化的产品路径固定为 `sandbox-runtime` 内的 `agent-browser -p browserless` 连接 sidecar，不再支持在 nested sandbox 内直接 launch 本地 Chromium
+- Compose 默认还会提供 `browserless` sidecar 作为受支持的远程浏览器后端；浏览器自动化的产品路径固定为 `sandbox-runtime` 内的 `agent-browser -p browserless` 或显式远程 `--cdp` 连接远程浏览器后端，不再支持在 nested sandbox 内直接 launch 本地 Chromium
+- 一次性截图、PDF、scrape 这类 one-shot 远程浏览器任务可以直接调用 Browserless；但当前托管 skill 仍统一放在 `agent-browser` 下，不额外拆分 Browserless skill
+- 如果 Browserless 或远程 CDP 连接不可用，browser automation 必须直接报阻塞；不要回退到本地浏览器启动、本地浏览器安装或宿主机浏览器会话
 - repo-local `sandbox-runtime` 镜像入口固定走 `infra/sandbox-runtime/entry.mjs` manager；manager 读取 `srt-pools.json`，按 enabled user pool 启停 `srt-child-entry.mjs`
 - sandbox-runtime manager 的 `/health` 必须返回最近一次 `srt-pool-status.json` 同源的聚合状态；单个 user pool `starting` / `degraded` / `failed` 时 manager 可以保持 HTTP 200，但 body 里的 `state` 必须反映降级。
 - sandbox-runtime manager 判断 per-user SRT child 是否可复用时，不能只看 Node child process 是否存在；必须探测 child `/pool/status` 并把 pool stats 与 `lastHealthAt` 写入 status 文件，启动宽限期后探活失败必须重启 child。

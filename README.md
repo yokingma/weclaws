@@ -124,7 +124,7 @@ fastagent --channel weixin
 - 媒体处理：`ffmpeg`。
 - 文档和文本提取：`pdftotext`、`pdfinfo`、`pandoc`。
 - 沙盒基础：`bubblewrap` 和 `@fastagent/sandbox-runtime`。
-- 浏览器自动化：镜像已预置 `agent-browser` 和 Chromium，默认 Compose 还会提供 `browserless` sidecar；受支持路径是由沙盒内 `agent-browser -p browserless` 连接远程浏览器后端。
+- 浏览器自动化：镜像已预置 `agent-browser` 客户端，默认 Compose 还会提供 `browserless` sidecar；受支持路径是由沙盒内 `agent-browser -p browserless` 或显式远程 `--cdp` 连接远程浏览器后端，不支持本地启动浏览器；少量一次性截图、PDF、scrape 任务也可以直接走 Browserless。
 
 用户 API 密钥、OAuth token、微信登录态、设备配对态等个性化状态不会被打进镜像，仍然需要通过运行时配置或外部状态注入。
 
@@ -151,7 +151,7 @@ WeClaws 内置一组官方托管技能，来源位于 `resources/skills/managed`
 | `skill-creator` | 创建、编辑、校验和打包 FastAgent 技能 | `python3` |
 | `video-frames` | 用 ffmpeg 从视频中截帧或生成检查图 | `ffmpeg` |
 | `personal-planner` | 面向复杂任务的先规划、再执行工作流 | 无额外命令依赖 |
-| `agent-browser` | 浏览器自动化技能说明已收编，默认走 Browserless sidecar | `agent-browser`、Chromium、Browserless sidecar |
+| `agent-browser` | 浏览器自动化技能说明已收编，默认走 Browserless sidecar | `agent-browser`、Browserless sidecar |
 
 技能是否真正可用，还取决于运行环境里是否具备对应命令和授权。例如 GitHub 技能需要可用的 `gh` 认证上下文；用户级密钥和 OAuth 状态不会内置进镜像。
 
