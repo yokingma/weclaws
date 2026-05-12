@@ -7,6 +7,8 @@
 - 托管 `agent-browser` skill 与相关 README / manuals / patterns 文档已进一步收口到 remote-only 契约：只允许 `agent-browser -p browserless` 或显式远程 `--cdp`，不支持在 nested sandbox、`sandbox-runtime` 或宿主机本地启动浏览器。
 - Browserless / 远程 CDP 不可用时的预期行为已明确为“直接报阻塞”，不再允许把本地浏览器启动、本地浏览器安装或宿主机会话当作回退路径。
 - `agent-browser` skill 现已补充 Browserless direct 的场景划分：一次性截图、PDF、scrape 等 one-shot 任务可直接走 Browserless，但当前不单独拆托管 Browserless skill。
+- 新增托管收编版 `ppt-skill`：已纳入 `resources/skills/managed` 与 `index.json`，但暂不加入 `manifest.json` 默认同步清单；收编版已统一成 WeClaws 口径，保留模板、参考资料和 Node 校验脚本，并把预览边界明确为“生成产物优先，不依赖 remote sandbox 内的本地浏览器路径”。
+- `ppt-skill` 两套模板已补上离线字体策略：内嵌关键拉丁字形，中文继续走系统字体栈，避免 Google Fonts 不稳定导致远程预览、截图或本地离线打开时版式漂移。
 
 ## 2026-05-11
 

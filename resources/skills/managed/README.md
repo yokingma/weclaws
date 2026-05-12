@@ -18,7 +18,7 @@
 
 当前已收编但暂不默认同步：
 
-- 当前无
+- `ppt-skill`
 
 当前约束：
 
@@ -34,4 +34,5 @@
 
 - 是否真正可用，仍取决于 runtime 是否具备对应 CLI 和所需环境变量
 - `agent-browser` 已进入默认同步清单；默认 Compose 部署下，WeClaws 只支持通过 `sandbox-runtime` 内的 `agent-browser -p browserless` 或显式远程 `--cdp` 执行浏览器自动化；少量一次性截图/PDF/scrape 场景可以直接调用 Browserless，但不单独拆 skill
+- `ppt-skill` 已完成收编但暂不默认同步；当前主要依赖 `node` 执行瑞士风校验脚本，产物是单文件 HTML deck 与同级 `images/` 目录；其模板已内嵌关键拉丁字形，中文继续走系统字体栈，避免 Google Fonts 不稳定导致版式漂移
 - 用户级 secrets 不进入镜像层

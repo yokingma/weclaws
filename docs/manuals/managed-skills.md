@@ -43,11 +43,19 @@
 | `personal-planner` | 面向复杂任务的先规划、再执行工作流 | 无额外命令依赖 | 默认同步 |
 | `agent-browser` | 浏览器自动化技能说明已收编 | `agent-browser`、Browserless sidecar | 默认同步 |
 
+当前已收编但暂不默认同步的技能：
+
+| 技能 | 用途 | 主要运行依赖 | 状态 |
+| --- | --- | --- | --- |
+| `ppt-skill` | 生成单文件 HTML 网页 PPT、配图提示词与瑞士风校验脚本 | `node` | 已收编，暂不默认同步 |
+
 说明：
 
 - `agent-browser` 已进入托管同步清单，`sandbox-runtime` 镜像也预置了 `agent-browser`。
 - 默认 Compose 部署现在会额外提供 `browserless` sidecar；托管技能里的受支持运行路径只有 `agent-browser -p browserless` 和显式远程 `--cdp`，不允许在 nested sandbox 或宿主机内直接 launch 本地浏览器。
 - Browserless 在当前仓库里首先是远程浏览器后端；一次性截图、PDF、scrape 这类 one-shot 任务可以直接使用 Browserless，但当前仍统一收口在 `agent-browser` skill 下说明，不单独拆托管 skill。
+- `ppt-skill` 已按 WeClaws 托管 skill 收编，但因为其预览与交付更依赖外部浏览器或 HTTP 托管路径，当前只进入 `index.json`，不进入 `manifest.json` 默认同步清单。
+- `ppt-skill` 模板已内嵌关键拉丁字形，中文继续走系统字体栈；当前目标是避免 Google Fonts 波动导致离线预览或远程截图排版漂移，而不是把整包 CJK 字体塞进 skill。
 
 ## 4. 同步时机
 

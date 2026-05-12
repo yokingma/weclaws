@@ -147,6 +147,23 @@
         "repo": "steipete/clawdis",
         "path": "skills/weather"
       }
+    },
+    {
+      "name": "ppt-skill",
+      "path": "ppt-skill",
+      "defaultSync": false,
+      "homepage": "https://github.com/op7418/guizang-ppt-skill",
+      "emoji": "🖼️",
+      "requires": {
+        "bins": [
+          "node"
+        ]
+      },
+      "source": {
+        "kind": "weclaws-curated",
+        "repo": "op7418/guizang-ppt-skill",
+        "path": "resources/skills/managed/ppt-skill"
+      }
     }
   ]
 }
