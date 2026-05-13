@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-05-13
+
+### Added
+
+- 为托管 `editorial-card-screenshot` 新增 managed-skill bundle contract 测试，锁住 `index.json` 收编状态、`manifest.json` 默认同步边界，以及 Browserless-only 截图契约。
+
+### Changed
+
+- `editorial-card-screenshot` 现已进入默认同步清单；相关 bundle contract 测试也同步收紧为“必须同时出现在 `manifest.json` 与 `index.json` 的默认同步集合中”。
+
 ## 2026-05-07
 
 ### Fixed

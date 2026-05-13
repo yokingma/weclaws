@@ -28,7 +28,7 @@
 
 当前默认同步清单版本：
 
-- `2026-04-15-curated-v6`
+- `2026-05-13-curated-v7`
 
 `manifest.json` 是默认同步的唯一权威来源。`index.json` 只用于展示、依赖说明和安装提示，不参与默认同步决策。
 
@@ -42,6 +42,7 @@
 | `video-frames` | 用 ffmpeg 从视频中截帧或生成检查图 | `ffmpeg` | 默认同步 |
 | `personal-planner` | 面向复杂任务的先规划、再执行工作流 | 无额外命令依赖 | 默认同步 |
 | `agent-browser` | 浏览器自动化技能说明已收编 | `agent-browser`、Browserless sidecar | 默认同步 |
+| `editorial-card-screenshot` | 生成高密度 editorial HTML 信息卡，并通过远程 Browserless 截图导出 PNG | `curl`、`python3`、Browserless sidecar | 默认同步 |
 
 当前已收编但暂不默认同步的技能：
 
@@ -56,6 +57,7 @@
 - Browserless 在当前仓库里首先是远程浏览器后端；一次性截图、PDF、scrape 这类 one-shot 任务可以直接使用 Browserless，但当前仍统一收口在 `agent-browser` skill 下说明，不单独拆托管 skill。
 - `ppt-skill` 已按 WeClaws 托管 skill 收编，但因为其预览与交付更依赖外部浏览器或 HTTP 托管路径，当前只进入 `index.json`，不进入 `manifest.json` 默认同步清单。
 - `ppt-skill` 模板已内嵌关键拉丁字形，中文继续走系统字体栈；生成 deck 时还必须同级分发本地 `assets/motion.min.js` 与 `assets/lucide.min.js`，避免外网字体或 CDN 波动导致离线预览、图标渲染和远程截图结果漂移。
+- `editorial-card-screenshot` 已进入 `manifest.json` 默认同步清单；其 PNG 导出路径固定为 Browserless direct，通过 `curl + python3` 向远程 `/screenshot` API 提交内联 HTML，不支持本地 Chrome / Chromium 回退，且不保证本地相对资源在远程截图时可解析。
 
 ## 4. 同步时机
 

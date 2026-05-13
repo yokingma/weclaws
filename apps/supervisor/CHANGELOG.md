@@ -11,6 +11,7 @@
 - `ppt-skill` 两套模板已补上离线字体策略：内嵌关键拉丁字形，中文继续走系统字体栈，避免 Google Fonts 不稳定导致远程预览、截图或本地离线打开时版式漂移。
 - `ppt-skill` 交付契约现已进一步收紧为本地分发：生成 deck 时必须同级携带 `assets/motion.min.js` 与 `assets/lucide.min.js`，模板不再依赖 `unpkg` / `jsDelivr` 这类外网运行时 CDN。
 - `ppt-skill` 两套模板现已内联默认 favicon，静态预览不再额外请求 `/favicon.ico`，避免本地 HTTP smoke 或远程截图链路出现无意义的 404 控制台噪音。
+- 托管 `editorial-card-screenshot` skill 现已进入 `manifest.json` 默认同步清单；其截图链路继续固定为 Browserless direct，一次性 PNG 导出不再依赖本地 Chrome / Chromium 或 `file://` 路径。
 
 ## 2026-05-11
 

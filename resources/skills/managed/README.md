@@ -10,6 +10,7 @@
 当前默认同步：
 
 - `agent-browser`
+- `editorial-card-screenshot`
 - `weather`
 - `github`
 - `skill-creator`
@@ -35,4 +36,5 @@
 - 是否真正可用，仍取决于 runtime 是否具备对应 CLI 和所需环境变量
 - `agent-browser` 已进入默认同步清单；默认 Compose 部署下，WeClaws 只支持通过 `sandbox-runtime` 内的 `agent-browser -p browserless` 或显式远程 `--cdp` 执行浏览器自动化；少量一次性截图/PDF/scrape 场景可以直接调用 Browserless，但不单独拆 skill
 - `ppt-skill` 已完成收编但暂不默认同步；当前主要依赖 `node` 执行瑞士风校验脚本，产物是同级交付的 `index.html`、`images/`、`assets/` 目录，其中 `assets/` 至少包含本地 `motion.min.js` 与 `lucide.min.js`；模板已内嵌关键拉丁字形，中文继续走系统字体栈，避免外网字体和 CDN 波动导致版式或图标漂移
+- `editorial-card-screenshot` 已进入默认同步清单；截图路径收口为 Browserless direct，一次性 PNG 导出通过 `curl + python3` 调用远程 `/screenshot` API，不支持本地 Chrome / Chromium 或 `file://` 预览回退；输入 HTML 必须尽量自包含，或仅引用远程可访问资源
 - 用户级 secrets 不进入镜像层

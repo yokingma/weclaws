@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editorial Card Template</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;700&family=Oswald:wght@500;700&family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #f5f3ed;
+        --ink: #111111;
+        --muted: #575757;
+        --accent: #111111;
+        --tint: rgba(0, 0, 0, 0.03);
+        --canvas-width: 1500px;
+        --canvas-height: 2000px;
+        --card-padding: 48px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        background: var(--paper);
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        font-family: "Inter", "Noto Sans SC", sans-serif;
+      }
+
+      .frame {
+        width: var(--canvas-width);
+        height: var(--canvas-height);
+        display: grid;
+        place-items: stretch;
+      }
+
+      .card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: var(--paper);
+        padding: var(--card-padding);
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 18px;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.04;
+        background-image:
+          radial-gradient(circle at 20% 20%, rgba(0, 0, 0, 0.8) 0.5px, transparent 0.8px),
+          radial-gradient(circle at 80% 40%, rgba(0, 0, 0, 0.7) 0.4px, transparent 0.7px);
+        background-size: 8px 8px, 11px 11px;
+      }
+
+      .meta {
+        margin: 0 0 12px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .title {
+        margin: 0;
+        font-family: "Noto Serif SC", serif;
+        font-size: 76px;
+        line-height: 0.92;
+        letter-spacing: -0.04em;
+        color: var(--ink);
+      }
+
+      .bar {
+        width: 112px;
+        height: 6px;
+        margin: 0;
+        background: var(--accent);
+      }
+
+      .body {
+        margin: 0;
+        font-size: 19px;
+        line-height: 1.56;
+        color: var(--ink);
+      }
+
+      .hero {
+        display: grid;
+        gap: 14px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.08fr 0.92fr;
+        gap: 18px;
+      }
+
+      .panel {
+        padding: 18px 20px;
+        background: var(--tint);
+        border-top: 6px solid var(--accent);
+      }
+
+      .caption {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
+      .subhead {
+        margin: 0 0 8px;
+        font-size: 13px;
+        line-height: 1.35;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      @media (max-width: 960px) {
+        html,
+        body {
+          width: auto;
+          height: auto;
+        }
+
+        body {
+          min-height: 100vh;
+        }
+
+        .frame {
+          width: 100%;
+          height: auto;
+        }
+
+        .card {
+          height: auto;
+          min-height: 100vh;
+          padding: 24px;
+          overflow: visible;
+        }
+
+        .title {
+          font-size: clamp(42px, 11vw, 76px);
+          line-height: 1;
+        }
+
+        .body {
+          font-size: 17px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+    </style>
+  </head>
+  <body>
+    <main class="frame">
+      <article class="card">
+        <section class="hero">
+          <p class="meta">Density / Medium</p>
+          <h1 class="title">Replace This Headline</h1>
+          <div class="bar"></div>
+          <p class="body">
+            Replace this paragraph with the user's real content. Keep it compact,
+            editorial, and screenshot-ready.
+          </p>
+        </section>
+        <section class="grid">
+          <section class="panel">
+            <p class="subhead">Primary Block</p>
+            <p class="caption">Use one heavier block with richer copy, bullets, or sub-points.</p>
+          </section>
+          <section class="panel">
+            <p class="subhead">Support Block</p>
+            <p class="caption">Use smaller blocks for supporting evidence, selection logic, or side notes.</p>
+          </section>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>

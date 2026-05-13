@@ -1,9 +1,13 @@
 {
-  "version": "2026-04-15-curated-v6",
+  "version": "2026-05-13-curated-v7",
   "skills": [
     {
       "name": "agent-browser",
       "path": "agent-browser"
+    },
+    {
+      "name": "editorial-card-screenshot",
+      "path": "editorial-card-screenshot"
     },
     {
       "name": "weather",

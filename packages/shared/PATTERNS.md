@@ -62,6 +62,7 @@
 
 - 官方托管 bundle 根目录固定为 `resources/skills/managed`
 - 运行时托管目标只允许是 `storage/instances/<botId>/data/skills`
+- 对默认同步和托管但暂不默认同步的 skill，都应在 `packages/shared/src/managed-skills/__tests__` 下补 bundle contract 测试，至少锁住 `index.json` 收编状态、`manifest.json` 默认同步边界，以及和当前运行契约直接相关的静态资源/脚本文案约束
 - managed skills install 的临时 staging 目录必须与目标 `data/skills` 位于同一文件系统内，避免容器挂载卷上从 `/tmp` 直接 `rename` 到实例目录触发 `EXDEV`
 - `manifest.json` 中的 `skill.path` 规范化后必须仍然位于 bundle 根目录内，不能通过 `..`、嵌套回退或符号链接逃逸到外部目录
 - `skill.name` 必须是 `data/skills` 下的单段子目录名：

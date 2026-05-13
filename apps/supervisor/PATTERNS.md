@@ -96,6 +96,7 @@
 - 一次性截图、PDF、scrape 这类 one-shot 远程浏览器任务可以直接调用 Browserless；但当前托管 skill 仍统一放在 `agent-browser` 下，不额外拆分 Browserless skill
 - 如果 Browserless 或远程 CDP 连接不可用，browser automation 必须直接报阻塞；不要回退到本地浏览器启动、本地浏览器安装或宿主机浏览器会话
 - `ppt-skill` 当前已收编到 managed bundle，但不进入默认同步清单；其主要产物是 bot workspace 内同级交付的 `index.html`、`images/`、`assets/` 目录，预览不应依赖 remote sandbox 内的 `file://` 本地浏览器路径；`assets/` 至少包含本地 `motion.min.js` 与 `lucide.min.js`，模板不得再依赖外网 CDN；模板内嵌关键拉丁字形，中文继续走系统字体栈，不把整包 CJK 字体打进托管 skill，并应内联默认 favicon，避免静态预览链路额外打出 `/favicon.ico` 404
+- `editorial-card-screenshot` 当前已进入 managed bundle 默认同步清单；其截图链路固定为 Browserless direct：skill 侧只允许用 `curl + python3` 把自包含 HTML 提交到远程 `/screenshot` API，不允许本地 Chrome / Chromium、宿主机浏览器或 `file://` 路径回退；如果卡片依赖图片或图标，必须内联或使用远程可访问资源
 - repo-local `sandbox-runtime` 镜像入口固定走 `infra/sandbox-runtime/entry.mjs` manager；manager 读取 `srt-pools.json`，按 enabled user pool 启停 `srt-child-entry.mjs`
 - sandbox-runtime manager 的 `/health` 必须返回最近一次 `srt-pool-status.json` 同源的聚合状态；单个 user pool `starting` / `degraded` / `failed` 时 manager 可以保持 HTTP 200，但 body 里的 `state` 必须反映降级。
 - sandbox-runtime manager 判断 per-user SRT child 是否可复用时，不能只看 Node child process 是否存在；必须探测 child `/pool/status` 并把 pool stats 与 `lastHealthAt` 写入 status 文件，启动宽限期后探活失败必须重启 child。

@@ -1,5 +1,5 @@
 {
-  "version": "2026-05-12-curated-v7",
+  "version": "2026-05-13-curated-v9",
   "skills": [
     {
       "name": "agent-browser",
@@ -163,6 +163,23 @@
         "kind": "weclaws-curated",
         "repo": "op7418/guizang-ppt-skill",
         "path": "resources/skills/managed/ppt-skill"
+      }
+    },
+    {
+      "name": "editorial-card-screenshot",
+      "path": "editorial-card-screenshot",
+      "defaultSync": true,
+      "emoji": "📰",
+      "requires": {
+        "bins": [
+          "curl",
+          "python3"
+        ]
+      },
+      "source": {
+        "kind": "weclaws-curated",
+        "repo": "weclaws",
+        "path": "resources/skills/managed/editorial-card-screenshot"
       }
     }
   ]
