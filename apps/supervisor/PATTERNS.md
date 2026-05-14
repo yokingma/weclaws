@@ -82,9 +82,9 @@
 
 - 当前容器入口固定为 `node apps/supervisor/dist/index.js`
 - `apps/supervisor/scripts/build.mjs` 是 supervisor Docker 运行产物的唯一构建入口：它会 bundle `src/index.ts` 以及 workspace 内的 `@weclaws/db` / `@weclaws/shared`，并把 `packages/db/src/migrations` 复制到 `apps/supervisor/dist/migrations`
-- `apps/supervisor` 自己声明 `@fastagent/cli@0.7.4` 运行时依赖；Compose 构建直接复用包级 `node_modules/.bin/fastagent`，不再额外全局安装或固定注入 `FASTAGENT_BINARY_PATH`
+- `apps/supervisor` 自己声明 `@fastagent/cli@0.7.5` 运行时依赖；Compose 构建直接复用包级 `node_modules/.bin/fastagent`，不再额外全局安装或固定注入 `FASTAGENT_BINARY_PATH`
 - repo-local `@fastagent/cli` 版本升级时，`apps/supervisor/package.json`、根 `pnpm-lock.yaml`、`docs/manuals/fastagent-cli-contract.md`、`docs/manuals/version-matrix.md`、`docs/manuals/docker-deployment-runbook.md` 必须在同一次改动里同步，并由 `apps/supervisor/src/__tests__/compose-config.test.ts` 锁住
-- Compose 默认会在本仓库内构建 `sandbox-runtime` 运行镜像，并通过 `infra/docker/sandbox-runtime.versions.env` 固定 `@fastagent/sandbox-runtime` 版本；当前默认基线是 `0.5.4`
+- Compose 默认会在本仓库内构建 `sandbox-runtime` 运行镜像，并通过 `infra/docker/sandbox-runtime.versions.env` 固定 `@fastagent/sandbox-runtime` 版本；当前默认基线是 `0.5.5`
 - `sandbox-runtime` 镜像构建时必须删除 Debian 账号数据库备份文件 `/etc/passwd-`、`/etc/shadow-`、`/etc/group-` 和 `/etc/gshadow-`；session denyRead 仍保留这些路径作为运行期兜底
 - `sandbox-runtime` 的发布镜像构建任务不能硬编码或传入 `SANDBOX_RUNTIME_NPM_VERSION`；生产 `latest` 镜像必须走同一个 Dockerfile 版本文件默认值
 - Compose 默认还会通过 `AGENT_BROWSER_NPM_VERSION` 固定 `agent-browser` 版本；当前基线是 `0.27.0`
@@ -104,8 +104,9 @@
 - sandbox-runtime manager 停 per-user SRT child 必须先 `SIGTERM`、等待退出宽限期、再用 `SIGKILL` 兜底；`child.killed` 只能表示信号已发送，不能当作进程已退出。
 - sandbox-runtime manager 的 reconcile / stopAll 必须在 manager 进程内串行执行；interval、file watcher 或 shutdown 不能并发修改 `children` map，也不能并发写同一个 status 临时文件。
 - `srt-child-entry.mjs` 是唯一允许启动 `SandboxAPI` 的子进程入口；它会读取 `SANDBOX_WORKSPACE_MAP_FILE`，保留对外 session root 为真实 bot `workspace`，并在命令执行前把虚拟 cwd `/workspace` / `/state` 翻译回真实 bot `workspace` / `data`
-- child wrapper 还会通过 `NODE_OPTIONS=--import=.../worker-bootstrap.mjs` 给 sandbox worker 预加载 WeClaws bootstrap；这个 bootstrap 只负责在 Linux 下把当前 session 的 `allowWrite` 根追加回最终 bwrap 参数，避免对 `storageRoot`、`instancesRoot`、`SRT_WORKSPACE_BASE_ROOT`、pool `basePath` 等父级目录的 deny 重新把当前 bot 压成只读
+- child wrapper 还会通过 `NODE_OPTIONS=--import=.../worker-bootstrap.mjs` 给 sandbox worker 预加载 WeClaws bootstrap；这个 bootstrap 负责在 Linux 下把当前 session 的 `allowWrite` 根追加回最终 bwrap 参数，避免对 `storageRoot`、`instancesRoot`、`SRT_WORKSPACE_BASE_ROOT`、pool `basePath` 等父级目录的 deny 重新把当前 bot 压成只读
 - worker bootstrap 还必须把 `virtualPathAliases` 追加成最终 bwrap `--bind <real> /workspace|/state`；如果上游重建 config 时剥离自定义字段，bootstrap 必须从当前 bot 的 `workspace` / `data` write roots 推导同样的 alias bind，让 sandbox 内命令正文里直接引用 `/workspace/...`、`/state/...` 时也命中当前 bot 的真实目录，而不是只靠 `cwd` 翻译兜底
+- worker bootstrap 在追加 `/workspace` / `/state` alias bind 前必须先确保这些根级挂载点已存在；Linux bwrap 在 `--ro-bind / /` 后不能再创建缺失的根级目标目录，否则任何后续 `bash` / `glob` 命令都会在执行用户命令前失败
 - Linux writable rebind 只能插在最终 bwrap argv 的 filesystem bind 阶段末尾、PID namespace 阶段之前；不能简单按 `--` 分隔符回插，否则会把 `--bind` 放到 `--unshare-pid` / `--proc` 之后，直接打坏真实命令执行链
 - sandbox-runtime manager 必须只通过 supervisor 渲染的 private config 文件管理 per-user SRT child；不要让 manager 读取 SQLite，也不要直接执行未打 WeClaws patch 的全局 `fastagent-sandbox`
 - 当前 wrapper 仍直接 patch 已发布 `sandbox-runtime` tarball 里的内部 `dist/**` 模块；升级 `SANDBOX_RUNTIME_NPM_VERSION` 时必须确认发布包仍包含 `dist/core/WorkspaceManager.js`、`dist/core/SandboxProcessPool.js`、`dist/api/SandboxAPI.js`、`dist/config/default.js`、`dist/utils/errors.js`，以及上游 `@anthropic-ai/sandbox-runtime/dist/sandbox/sandbox-manager.js`

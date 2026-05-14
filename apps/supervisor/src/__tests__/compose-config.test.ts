@@ -37,16 +37,16 @@ describe('docker compose supervisor env wiring', () => {
       readFile(versionFilePath, 'utf8'),
     ]);
 
-    expect(versionFile).toContain('SANDBOX_RUNTIME_NPM_VERSION=0.5.4');
+    expect(versionFile).toContain('SANDBOX_RUNTIME_NPM_VERSION=0.5.5');
     expect(composeFile).toContain(
       'SANDBOX_RUNTIME_NPM_VERSION: ${SANDBOX_RUNTIME_NPM_VERSION:-}',
     );
-    expect(composeFile).not.toContain('SANDBOX_RUNTIME_NPM_VERSION:-0.5.4');
+    expect(composeFile).not.toContain('SANDBOX_RUNTIME_NPM_VERSION:-0.5.5');
     expect(dockerfile).toContain('COPY infra/docker/sandbox-runtime.versions.env');
     expect(dockerfile).toContain('. /tmp/sandbox-runtime.versions.env');
-    expect(dockerfile).not.toContain('ARG SANDBOX_RUNTIME_NPM_VERSION=0.5.4');
+    expect(dockerfile).not.toContain('ARG SANDBOX_RUNTIME_NPM_VERSION=0.5.5');
     expect(envExample).toContain('# SANDBOX_RUNTIME_NPM_VERSION=');
-    expect(envExample).not.toContain('# SANDBOX_RUNTIME_NPM_VERSION=0.5.4');
+    expect(envExample).not.toContain('# SANDBOX_RUNTIME_NPM_VERSION=0.5.5');
     expect(envExample).not.toContain('SANDBOX_RUNTIME_IMAGE=');
   });
 

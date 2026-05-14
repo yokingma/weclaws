@@ -77,7 +77,7 @@
 
 | Dependency | Current Version |
 | --- | --- |
-| `@fastagent/cli` | `0.7.4` |
+| `@fastagent/cli` | `0.7.5` |
 | `better-sqlite3` | `^12.10.0` |
 | `esbuild` | `^0.28.0` |
 | `tsx` | `^4.20.5` |
@@ -100,7 +100,7 @@
 
 | Area | Current Baseline |
 | --- | --- |
-| default Compose npm package | `@fastagent/sandbox-runtime@0.5.4` |
+| default Compose npm package | `@fastagent/sandbox-runtime@0.5.5` |
 | default Compose browser CLI | `agent-browser@0.27.0` |
 | default Compose remote browser backend | `ghcr.io/browserless/chromium:latest` |
 | default Compose JS runtime / package manager | `bun@1.3.13` |
@@ -113,12 +113,12 @@
 
 说明：
 
-- 这个版本由 `infra/docker/sandbox-runtime.versions.env` 里的 `SANDBOX_RUNTIME_NPM_VERSION=0.5.4` 控制；Compose env 只保留临时 override 入口
+- 这个版本由 `infra/docker/sandbox-runtime.versions.env` 里的 `SANDBOX_RUNTIME_NPM_VERSION=0.5.5` 控制；Compose env 只保留临时 override 入口
 - `agent-browser` 版本由 `infra/compose/.env.example` 里的 `AGENT_BROWSER_NPM_VERSION=0.27.0` 控制
 - `bun` 版本由 `infra/compose/.env.example` 里的 `BUN_VERSION=1.3.13` 控制
 - `pnpm` 版本由 `infra/compose/.env.example` 里的 `PNPM_VERSION=9.15.4` 控制，并与根 `package.json#packageManager` 对齐
 - `uv` 版本由 `infra/compose/.env.example` 里的 `UV_VERSION=0.11.7` 控制
-- 当前 Compose 默认网络策略已跟随上游 `sandbox-runtime@0.5.4` 的 denylist 公开语义：通过 `SRT_DEFAULT_DENIED_DOMAINS` 写入每个 user pool，空值表示 allow-by-default
+- 当前 Compose 默认网络策略已跟随上游 `sandbox-runtime@0.5.5` 的 denylist 公开语义：通过 `SRT_DEFAULT_DENIED_DOMAINS` 写入每个 user pool，空值表示 allow-by-default
 - 当前 sandbox 镜像会预装系统 `python3`、`gh`、`ffmpeg`、`jq`、压缩包工具、PDF / `.docx` 文本提取工具；公开 Compose 基线只保留 Browserless 远程浏览器路径，不再预装本地 Chromium 或执行 `agent-browser install --with-deps`
 - 当前默认浏览器执行路径由 `sandbox-runtime` 内的 `agent-browser@0.27.0` 连接 Compose `browserless` sidecar；`--cdp` 保留为调试兜底路径
 

@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- remote sandbox 的 worker bootstrap 现在会在最终 bwrap alias bind 前先创建 `/workspace` / `/state` 挂载点，避免 Linux 下根文件系统已被 `--ro-bind / /` 后，`bwrap --bind <real> /workspace` 因无法创建目标目录而让所有 `bash` 命令和根目录 `glob` 直接失败。
 - remote sandbox 不再把返回给 FastAgent host/tool 层的 `session.workspacePath` 改写成字面 `/workspace`；对外保持真实 bot `workspace` 路径，避免文件、搜索和 `bash` 工具在宿主进程里先执行 `realpath('/workspace')` 后直接失败。`/workspace` 与 `/state` 仍只作为 sandbox 内 bwrap alias 和 `cwd` 翻译入口保留。
 - remote sandbox 现在会把当前 bot 的真实 `workspace` / `data` 目录额外 bind 到字面 `/workspace` / `/state`，不再只翻译 `cwd`；即使上游 sandbox-runtime 重建 config 时丢掉 WeClaws 的自定义 alias 字段，worker bootstrap 也会从当前 bot 的 write roots 推导出这两个 bind，让 `bash /workspace/...` 和上游文件工具生成的绝对虚拟路径命中当前 bot scope。
 - `sandbox-runtime-session-security` 与 `sandbox-runtime-worker-bootstrap` 回归测试已补上 virtual path alias 断言，锁住 `/workspace -> bot workspace`、`/state -> bot data` 的实际 bwrap bind 行为。
@@ -11,9 +12,9 @@
 ### Changed
 
 - `apps/supervisor` 依赖的 `better-sqlite3` 已升级到 `^12.10.0`，对齐 `better-auth@^1.6.11` 当前要求的 SQLite 驱动 peer baseline。
-- repo-local FastAgent CLI 基线已升级到 `@fastagent/cli@0.7.4`，并同步更新 `pnpm-lock.yaml`、CLI contract、部署手册、版本矩阵和 Compose 配置回归测试。
-- Compose 默认 `sandbox-runtime` npm 基线已升级到 `@fastagent/sandbox-runtime@0.5.4`，并同步更新版本矩阵、部署手册、路径语义文档、PATTERNS 和 Compose 配置回归测试。
-- 已核对 `@fastagent/sandbox-runtime@0.5.4` 发布包和其 `@anthropic-ai/sandbox-runtime@0.0.42` 依赖仍包含当前 wrapper 直接 patch 的内部 `dist/**` 文件。
+- repo-local FastAgent CLI 基线已升级到 `@fastagent/cli@0.7.5`，并同步更新 `pnpm-lock.yaml`、CLI contract、部署手册、版本矩阵和 Compose 配置回归测试。
+- Compose 默认 `sandbox-runtime` npm 基线已升级到 `@fastagent/sandbox-runtime@0.5.5`，并同步更新版本矩阵、部署手册、路径语义文档、PATTERNS 和 Compose 配置回归测试。
+- 已核对 `@fastagent/sandbox-runtime@0.5.5` 发布包和其 `@anthropic-ai/sandbox-runtime@0.0.42` 依赖仍包含当前 wrapper 直接 patch 的内部 `dist/**` 文件。
 
 ## 2026-05-12
 

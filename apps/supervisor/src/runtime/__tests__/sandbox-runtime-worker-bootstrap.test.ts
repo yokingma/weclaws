@@ -1,6 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 // @ts-ignore repo-local ESM bootstrap test helper has no TS declaration surface
-import { collectWritablePathsNeedingRebind, injectWritableRebindArgs, stripFatalLinuxReadDenyArgs } from '../../../../../infra/sandbox-runtime/worker-bootstrap.mjs';
+import * as workerBootstrap from '../../../../../infra/sandbox-runtime/worker-bootstrap.mjs';
+
+const {
+  collectWritablePathsNeedingRebind,
+  ensureVirtualAliasMountPoints,
+  injectWritableRebindArgs,
+  resolveVirtualAliasBinds,
+  stripFatalLinuxReadDenyArgs,
+} = workerBootstrap;
 
 describe('sandbox-runtime worker bootstrap', () => {
   it('rebinds allowWrite paths that live inside denied parent directories', () => {
@@ -125,6 +133,22 @@ describe('sandbox-runtime worker bootstrap', () => {
       '-c',
       'pwd',
     ]);
+  });
+
+  it('prepares root-level virtual alias mount points before bwrap binds them', () => {
+    const mkdirSync = vi.fn();
+    const botWorkspacePath = '/app/storage/instances/bot_1/workspace';
+    const botDataPath = '/app/storage/instances/bot_1/data';
+
+    ensureVirtualAliasMountPoints(resolveVirtualAliasBinds([
+      botWorkspacePath,
+      botDataPath,
+    ]), {
+      mkdirSync,
+    });
+
+    expect(mkdirSync).toHaveBeenCalledWith('/workspace', { recursive: true });
+    expect(mkdirSync).toHaveBeenCalledWith('/state', { recursive: true });
   });
 
   it('injects virtual workspace and state alias binds before the sandbox command separator', () => {

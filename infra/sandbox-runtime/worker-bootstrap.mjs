@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs';
 import { basename, dirname, join, resolve, sep } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
@@ -50,10 +51,7 @@ export function injectWritableRebindArgs(args, writablePaths, virtualPathAliases
   }
 
   const insertionIndex = findWritableRebindInsertionIndex(sanitizedArgs, separatorIndex);
-  const virtualAliasBinds = uniqueVirtualAliasBinds([
-    ...normalizeVirtualAliasBinds(explicitVirtualPathAliases),
-    ...normalizeVirtualAliasBinds(deriveVirtualPathAliasesFromWritablePaths(normalizedWritablePaths)),
-  ]);
+  const virtualAliasBinds = resolveVirtualAliasBinds(normalizedWritablePaths, explicitVirtualPathAliases);
 
   return [
     ...sanitizedArgs.slice(0, insertionIndex),
@@ -132,6 +130,7 @@ export async function installLinuxWritableRebindBootstrap({
     }
 
     const parsedArgs = shellquote.parse(wrappedCommand).map((token) => String(token));
+    ensureVirtualAliasMountPoints(resolveVirtualAliasBinds(writablePaths, virtualPathAliases));
     const rewrittenArgs = injectWritableRebindArgs(parsedArgs, writablePaths, virtualPathAliases);
 
     if (rewrittenArgs.length === parsedArgs.length) {
@@ -149,6 +148,30 @@ export async function installLinuxWritableRebindBootstrap({
   });
 
   return true;
+}
+
+export function resolveVirtualAliasBinds(writablePaths, virtualPathAliases = {}) {
+  const normalizedWritablePaths = Array.isArray(writablePaths) ? writablePaths : [];
+  const explicitVirtualPathAliases = isRecord(virtualPathAliases) ? virtualPathAliases : {};
+
+  return uniqueVirtualAliasBinds([
+    ...normalizeVirtualAliasBinds(explicitVirtualPathAliases),
+    ...normalizeVirtualAliasBinds(deriveVirtualPathAliasesFromWritablePaths(normalizedWritablePaths)),
+  ]);
+}
+
+export function ensureVirtualAliasMountPoints(binds, filesystem = { mkdirSync }) {
+  const mkdir = typeof filesystem.mkdirSync === 'function'
+    ? filesystem.mkdirSync
+    : mkdirSync;
+
+  for (const bind of Array.isArray(binds) ? binds : []) {
+    if (!bind || typeof bind.target !== 'string' || !bind.target.startsWith('/')) {
+      continue;
+    }
+
+    mkdir(bind.target, { recursive: true });
+  }
 }
 
 function containsGlobChars(pathPattern) {

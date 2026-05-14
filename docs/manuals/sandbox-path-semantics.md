@@ -21,7 +21,7 @@
 - `apps/supervisor/src/runtime/spawn-fastagent.ts`
 - `infra/sandbox-runtime/workspace-root-override.mjs`
 - `apps/supervisor/PATTERNS.md`
-- `@fastagent/sandbox-runtime@0.5.4` 上游源码与 README：
+- `@fastagent/sandbox-runtime@0.5.5` 上游源码与 README：
   - `apps/sandbox-runtime/src/core/WorkspaceManager.ts`
   - `apps/sandbox-runtime/src/core/ExecutionContext.ts`
   - `apps/sandbox-runtime/src/core/SandboxProcessPool.ts`
