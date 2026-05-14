@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-05-14
+
+### Changed
+
+- Web 运行时依赖已提升到安全基线：`next` 升级到 `^16.2.6`，`better-auth` 升级到 `^1.6.11`，用于压掉当前公开的 Next.js / Better Auth 依赖树安全告警。
+- 根测试工具链已切到 `vitest@^4.1.6` 和 `vite@^6.4.2`；`apps/web` 相关单测的 `EventSource` / `Intl.DateTimeFormat` mock 现已改成兼容新版本构造函数语义的写法。
+
 ## 2026-05-10
 
 ### Changed

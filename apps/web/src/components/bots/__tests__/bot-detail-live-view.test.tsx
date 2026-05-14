@@ -107,7 +107,9 @@ it('renders primary actions in the header and separates qr sharing from runtime 
     }), { status: 200 }));
   });
 
-  vi.stubGlobal('EventSource', vi.fn(() => eventSourceMock));
+  vi.stubGlobal('EventSource', vi.fn(function EventSourceMock() {
+    return eventSourceMock;
+  }));
   vi.stubGlobal('fetch', fetchMock);
 
   renderWithLocale(
@@ -248,7 +250,9 @@ it('renders sanitized stream errors separately from bot runtime payload updates'
     close: vi.fn(),
   };
 
-  vi.stubGlobal('EventSource', vi.fn(() => eventSourceMock));
+  vi.stubGlobal('EventSource', vi.fn(function EventSourceMock() {
+    return eventSourceMock;
+  }));
 
   renderWithLocale(
     <BotDetailLiveView

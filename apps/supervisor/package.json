@@ -7,7 +7,7 @@
     "@fastagent/cli": "0.7.2",
     "@weclaws/db": "workspace:*",
     "@weclaws/shared": "workspace:*",
-    "better-sqlite3": "^11.8.1"
+    "better-sqlite3": "^12.10.0"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",

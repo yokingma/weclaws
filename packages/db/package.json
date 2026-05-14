@@ -5,8 +5,8 @@
   "type": "module",
   "dependencies": {
     "@weclaws/shared": "workspace:*",
-    "better-sqlite3": "^11.8.1",
-    "drizzle-orm": "^0.38.4"
+    "better-sqlite3": "^12.10.0",
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",

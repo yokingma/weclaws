@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-05-14
+
+### Changed
+
+- `apps/supervisor` 依赖的 `better-sqlite3` 已升级到 `^12.10.0`，对齐 `better-auth@^1.6.11` 当前要求的 SQLite 驱动 peer baseline。
+- FastAgent CLI 事实文档与回归测试已重新对齐到当前 repo-local `@fastagent/cli@0.7.2`，避免 package metadata、manuals 和 compose-config contract 漂移。
+
 ## 2026-05-12
 
 ### Changed

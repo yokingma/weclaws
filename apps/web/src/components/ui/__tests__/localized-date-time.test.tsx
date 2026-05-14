@@ -14,11 +14,16 @@ describe('LocalizedDateTime', () => {
   });
 
   it('renders a stable server snapshot and localizes after hydration', async () => {
-    dateTimeFormatSpy.mockImplementation(((locale: string | string[], options?: Intl.DateTimeFormatOptions) => ({
-      format: () => options?.timeZone === 'UTC'
-        ? 'Mar 30, 2026, 10:18 UTC'
-        : 'Mar 30, 2026, 18:18 Local',
-    })) as unknown as typeof Intl.DateTimeFormat);
+    dateTimeFormatSpy.mockImplementation((function DateTimeFormatMock(
+      locale: string | string[],
+      options?: Intl.DateTimeFormatOptions,
+    ) {
+      return {
+        format: () => options?.timeZone === 'UTC'
+          ? 'Mar 30, 2026, 10:18 UTC'
+          : 'Mar 30, 2026, 18:18 Local',
+      };
+    }) as unknown as typeof Intl.DateTimeFormat);
 
     const serverMarkup = renderToString(
       <LocalizedDateTime

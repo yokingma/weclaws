@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2026-05-14
+
+### Changed
+
+- 数据库依赖基线已提升到安全版本：`drizzle-orm` 升级到 `^0.45.2`，`better-sqlite3` 升级到 `^12.10.0`，用于压掉当前 Drizzle / SQLite 相关安全告警并对齐上层 auth/runtime 依赖树。
+
 ## 2026-05-10
 
 ### Changed

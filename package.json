@@ -29,6 +29,12 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "defu": "6.1.7",
+      "postcss": "8.5.14"
+    }
+  },
   "scripts": {
     "dev:web": "pnpm --filter @weclaws/web dev",
     "dev:supervisor": "pnpm --filter @weclaws/supervisor dev",
@@ -44,7 +50,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
-    "vitest": "^2.1.9",
+    "vite": "^6.4.2",
+    "vitest": "^4.1.6",
     "typescript": "^5.7.3"
   }
 }

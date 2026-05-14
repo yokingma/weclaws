@@ -35,7 +35,7 @@
 | Workspace package manager | `pnpm@9.15.4` | root `package.json#packageManager` |
 | Node.js engine floor | `>=20.0.0` | root `package.json#engines.node` |
 | TypeScript | `^5.7.3` | root `package.json` |
-| Vitest | `^2.1.9` | root `package.json` |
+| Vitest | `^4.1.6` | root `package.json` |
 
 ### Node.js 建议
 
@@ -60,10 +60,10 @@
 
 | Dependency | Current Version |
 | --- | --- |
-| `next` | `^16.2.1` |
+| `next` | `^16.2.6` |
 | `react` | `^19.2.4` |
 | `react-dom` | `^19.2.4` |
-| `better-auth` | `^1.5.6` |
+| `better-auth` | `^1.6.11` |
 | `zod` | `^4.3.6` |
 | `qrcode` | `^1.5.4` |
 | `tailwindcss` | `^4.2.2` |
@@ -77,8 +77,8 @@
 
 | Dependency | Current Version |
 | --- | --- |
-| `@fastagent/cli` | `0.6.50` |
-| `better-sqlite3` | `^11.8.1` |
+| `@fastagent/cli` | `0.7.2` |
+| `better-sqlite3` | `^12.10.0` |
 | `esbuild` | `^0.28.0` |
 | `tsx` | `^4.20.5` |
 
@@ -91,9 +91,9 @@
 
 | Dependency | Current Version |
 | --- | --- |
-| `drizzle-orm` | `^0.38.4` |
+| `drizzle-orm` | `^0.45.2` |
 | `drizzle-kit` | `^0.30.6` |
-| `better-sqlite3` | `^11.8.1` |
+| `better-sqlite3` | `^12.10.0` |
 | `@types/better-sqlite3` | `^7.6.12` |
 
 ## 8. Sandbox Runtime Baseline
