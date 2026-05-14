@@ -211,6 +211,10 @@ export function installSessionSecurityOverrides({
         '~/.ssh/**',
         '~/.aws/**',
       ]),
+      virtualPathAliases: {
+        [VIRTUAL_WORKSPACE_ROOT]: realWorkspacePath,
+        [VIRTUAL_STATE_ROOT]: persistentStatePath,
+      },
     };
   };
 

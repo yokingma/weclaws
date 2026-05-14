@@ -2,6 +2,11 @@
 
 ## 2026-05-14
 
+### Fixed
+
+- remote sandbox 现在会把当前 bot 的真实 `workspace` / `data` 目录额外 bind 到字面 `/workspace` / `/state`，不再只翻译 `cwd`；即使上游 sandbox-runtime 重建 config 时丢掉 WeClaws 的自定义 alias 字段，worker bootstrap 也会从当前 bot 的 write roots 推导出这两个 bind，让 `bash /workspace/...` 和上游文件工具生成的绝对虚拟路径命中当前 bot scope。
+- `sandbox-runtime-session-security` 与 `sandbox-runtime-worker-bootstrap` 回归测试已补上 virtual path alias 断言，锁住 `/workspace -> bot workspace`、`/state -> bot data` 的实际 bwrap bind 行为。
+
 ### Changed
 
 - `apps/supervisor` 依赖的 `better-sqlite3` 已升级到 `^12.10.0`，对齐 `better-auth@^1.6.11` 当前要求的 SQLite 驱动 peer baseline。

@@ -129,6 +129,20 @@ remote sandbox 模式下，WeClaws 的 wrapper 会再做一层路径虚拟化。
 1. 隐藏真实宿主机绝对路径
 2. 把可访问边界收口成固定、稳定、易理解的两个根
 
+当前实现里，这两个别名不再只是“给 `cwd` 翻译用的虚拟字符串”：
+
+- session 对外仍显示 `/workspace`
+- `resolveCommandCwd()` 仍会把 `cwd=/workspace/...`、`cwd=/state/...` 翻译回真实目录
+- worker bootstrap 还会在最终 bwrap argv 里额外追加 `--bind <realWorkspacePath> /workspace` 与 `--bind <realDataPath> /state`
+- 如果上游 sandbox-runtime 重建 config 时剥离了 WeClaws 的自定义 alias 字段，worker bootstrap 会从当前 bot 的 `workspace` / `data` write roots 兜底推导这两个 alias bind
+
+这意味着 sandbox 内命令正文如果直接引用：
+
+- `/workspace/...`
+- `/state/...`
+
+现在也会命中当前 bot 的真实目录，而不是只在 `cwd` 场景下成立。
+
 ## 6. `stateRoot` 到底是什么
 
 `stateRoot` 不是 WeClaws 的 bot 数据目录，而是 `@fastagent/sandbox-runtime` 为每个 session 派生的内部运行时目录。

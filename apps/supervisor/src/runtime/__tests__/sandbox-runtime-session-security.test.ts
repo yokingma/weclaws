@@ -210,7 +210,7 @@ describe('sandbox-runtime session security override', () => {
           allowWrite: [],
           denyRead: [],
           denyWrite: [],
-        };
+        } as Record<string, unknown>;
       }
     }
 
@@ -237,6 +237,10 @@ describe('sandbox-runtime session security override', () => {
       botDataPath,
       stateRoot,
     ]);
+    expect(restrictions.virtualPathAliases).toEqual({
+      '/workspace': botWorkspacePath,
+      '/state': botDataPath,
+    });
     expect(restrictions.denyRead).toEqual(expect.arrayContaining([
       storageRoot,
       `${storageRoot}/**`,

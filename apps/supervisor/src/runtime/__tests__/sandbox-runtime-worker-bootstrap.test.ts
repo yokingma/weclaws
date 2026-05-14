@@ -38,6 +38,48 @@ describe('sandbox-runtime worker bootstrap', () => {
   });
 
   it('injects writable rebinds before the sandbox command separator', () => {
+    const outputPath = '/app/storage/instances/bot_1/output';
+    const cachePath = '/app/storage/instances/bot_1/cache';
+
+    expect(injectWritableRebindArgs([
+      'bwrap',
+      '--ro-bind',
+      '/',
+      '/',
+      '--tmpfs',
+      '/app/storage/instances',
+      '--dev',
+      '/dev',
+      '--',
+      '/bin/bash',
+      '-c',
+      'pwd',
+    ], [
+      outputPath,
+      cachePath,
+    ])).toEqual([
+      'bwrap',
+      '--ro-bind',
+      '/',
+      '/',
+      '--tmpfs',
+      '/app/storage/instances',
+      '--dev',
+      '/dev',
+      '--bind',
+      outputPath,
+      outputPath,
+      '--bind',
+      cachePath,
+      cachePath,
+      '--',
+      '/bin/bash',
+      '-c',
+      'pwd',
+    ]);
+  });
+
+  it('derives virtual workspace and state alias binds from bot write roots when upstream drops custom fields', () => {
     const botWorkspacePath = '/app/storage/instances/bot_1/workspace';
     const botDataPath = '/app/storage/instances/bot_1/data';
 
@@ -72,6 +114,63 @@ describe('sandbox-runtime worker bootstrap', () => {
       '--bind',
       botDataPath,
       botDataPath,
+      '--bind',
+      botWorkspacePath,
+      '/workspace',
+      '--bind',
+      botDataPath,
+      '/state',
+      '--',
+      '/bin/bash',
+      '-c',
+      'pwd',
+    ]);
+  });
+
+  it('injects virtual workspace and state alias binds before the sandbox command separator', () => {
+    const botWorkspacePath = '/app/storage/instances/bot_1/workspace';
+    const botDataPath = '/app/storage/instances/bot_1/data';
+
+    expect(injectWritableRebindArgs([
+      'bwrap',
+      '--ro-bind',
+      '/',
+      '/',
+      '--tmpfs',
+      '/app/storage/instances',
+      '--dev',
+      '/dev',
+      '--',
+      '/bin/bash',
+      '-c',
+      'pwd',
+    ], [
+      botWorkspacePath,
+      botDataPath,
+    ], {
+      '/workspace': botWorkspacePath,
+      '/state': botDataPath,
+    })).toEqual([
+      'bwrap',
+      '--ro-bind',
+      '/',
+      '/',
+      '--tmpfs',
+      '/app/storage/instances',
+      '--dev',
+      '/dev',
+      '--bind',
+      botWorkspacePath,
+      botWorkspacePath,
+      '--bind',
+      botDataPath,
+      botDataPath,
+      '--bind',
+      botWorkspacePath,
+      '/workspace',
+      '--bind',
+      botDataPath,
+      '/state',
       '--',
       '/bin/bash',
       '-c',
@@ -117,6 +216,12 @@ describe('sandbox-runtime worker bootstrap', () => {
       '--bind',
       botDataPath,
       botDataPath,
+      '--bind',
+      botWorkspacePath,
+      '/workspace',
+      '--bind',
+      botDataPath,
+      '/state',
       '--unshare-pid',
       '--proc',
       '/proc',

@@ -1,4 +1,4 @@
-import { resolve, sep } from 'node:path';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 
@@ -6,6 +6,10 @@ const WORKER_BOOTSTRAP_PATCH_MARKER = Symbol.for(
   'weclaws.sandbox-runtime.worker-bootstrap.writable-rebind',
 );
 const LINUX_MTAB_DENY_TARGET = '/etc/mtab';
+const VIRTUAL_WORKSPACE_ROOT = '/workspace';
+const VIRTUAL_STATE_ROOT = '/state';
+const WORKSPACE_DIRECTORY_NAME = 'workspace';
+const DATA_DIRECTORY_NAME = 'data';
 
 await installLinuxWritableRebindBootstrap();
 
@@ -26,8 +30,15 @@ export function collectWritablePathsNeedingRebind(filesystem = {}) {
   );
 }
 
-export function injectWritableRebindArgs(args, writablePaths) {
-  if (!Array.isArray(args) || args.length === 0 || writablePaths.length === 0) {
+export function injectWritableRebindArgs(args, writablePaths, virtualPathAliases = {}) {
+  const normalizedWritablePaths = Array.isArray(writablePaths) ? writablePaths : [];
+  const explicitVirtualPathAliases = isRecord(virtualPathAliases) ? virtualPathAliases : {};
+
+  if (
+    !Array.isArray(args)
+    || args.length === 0
+    || (normalizedWritablePaths.length === 0 && Object.keys(explicitVirtualPathAliases).length === 0)
+  ) {
     return Array.isArray(args) ? [...args] : [];
   }
 
@@ -39,10 +50,15 @@ export function injectWritableRebindArgs(args, writablePaths) {
   }
 
   const insertionIndex = findWritableRebindInsertionIndex(sanitizedArgs, separatorIndex);
+  const virtualAliasBinds = uniqueVirtualAliasBinds([
+    ...normalizeVirtualAliasBinds(explicitVirtualPathAliases),
+    ...normalizeVirtualAliasBinds(deriveVirtualPathAliasesFromWritablePaths(normalizedWritablePaths)),
+  ]);
 
   return [
     ...sanitizedArgs.slice(0, insertionIndex),
-    ...writablePaths.flatMap((path) => ['--bind', path, path]),
+    ...normalizedWritablePaths.flatMap((path) => ['--bind', path, path]),
+    ...virtualAliasBinds.flatMap(({ source, target }) => ['--bind', source, target]),
     ...sanitizedArgs.slice(insertionIndex),
   ];
 }
@@ -107,13 +123,16 @@ export async function installLinuxWritableRebindBootstrap({
     const wrappedCommand = await originalWrapWithSandbox(command, binShell, customConfig, abortSignal);
     const filesystem = customConfig?.filesystem ?? SandboxManager.getConfig?.()?.filesystem ?? {};
     const writablePaths = collectWritablePathsNeedingRebind(filesystem);
+    const virtualPathAliases = isRecord(filesystem.virtualPathAliases)
+      ? filesystem.virtualPathAliases
+      : {};
 
-    if (writablePaths.length === 0) {
+    if (writablePaths.length === 0 && Object.keys(virtualPathAliases).length === 0) {
       return wrappedCommand;
     }
 
     const parsedArgs = shellquote.parse(wrappedCommand).map((token) => String(token));
-    const rewrittenArgs = injectWritableRebindArgs(parsedArgs, writablePaths);
+    const rewrittenArgs = injectWritableRebindArgs(parsedArgs, writablePaths, virtualPathAliases);
 
     if (rewrittenArgs.length === parsedArgs.length) {
       return wrappedCommand;
@@ -170,4 +189,78 @@ function uniquePaths(paths) {
   }
 
   return nextPaths;
+}
+
+function deriveVirtualPathAliasesFromWritablePaths(writablePaths) {
+  const normalizedPaths = uniquePaths(
+    writablePaths
+      .filter((path) => typeof path === 'string' && path.length > 0)
+      .map((path) => resolve(path)),
+  );
+  const normalizedPathSet = new Set(normalizedPaths);
+
+  for (const workspacePath of normalizedPaths) {
+    if (basename(workspacePath) !== WORKSPACE_DIRECTORY_NAME) {
+      continue;
+    }
+
+    const dataPath = join(dirname(workspacePath), DATA_DIRECTORY_NAME);
+
+    if (normalizedPathSet.has(dataPath)) {
+      return {
+        [VIRTUAL_WORKSPACE_ROOT]: workspacePath,
+        [VIRTUAL_STATE_ROOT]: dataPath,
+      };
+    }
+  }
+
+  return {};
+}
+
+function normalizeVirtualAliasBinds(virtualPathAliases) {
+  if (!isRecord(virtualPathAliases)) {
+    return [];
+  }
+
+  const binds = [];
+  const seenTargets = new Set();
+
+  for (const [target, source] of Object.entries(virtualPathAliases)) {
+    if (typeof source !== 'string' || source.length === 0) {
+      continue;
+    }
+
+    if (typeof target !== 'string' || target.length === 0 || !target.startsWith('/')) {
+      continue;
+    }
+
+    if (seenTargets.has(target)) {
+      continue;
+    }
+
+    seenTargets.add(target);
+    binds.push({ source: resolve(source), target });
+  }
+
+  return binds;
+}
+
+function uniqueVirtualAliasBinds(binds) {
+  const nextBinds = [];
+  const seenTargets = new Set();
+
+  for (const bind of binds) {
+    if (seenTargets.has(bind.target)) {
+      continue;
+    }
+
+    seenTargets.add(bind.target);
+    nextBinds.push(bind);
+  }
+
+  return nextBinds;
+}
+
+function isRecord(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
