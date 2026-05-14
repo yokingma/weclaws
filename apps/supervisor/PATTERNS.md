@@ -58,7 +58,7 @@
 - `IM_GATEWAY_*` 与 bot 运行所需的 `FASTAGENT_API_KEY` / `FASTAGENT_PROVIDER` / `FASTAGENT_MODEL`（以及 profile 自带的 `FASTAGENT_BASE_URL` / `FASTAGENT_API_TYPE`）都由 supervisor 在 spawn 前统一注入；`SANDBOX_*` 仅在 `FASTAGENT_SANDBOX_MODE=remote` 时从 bot owner 的 SRT pool 注入
 - `FASTAGENT_SANDBOX_MODE=remote` 时，supervisor 必须从 `user_sandbox_runtime_pools` 渲染 `storage/sandbox-runtime-private/srt-pools.json`，并把每个 bot workspace 登记到 `storage/sandbox-runtime-private/workspace-map/<ownerUserId>.json`；这些文件只允许 supervisor 和 sandbox-runtime 共享，不能暴露在 `instances` 根目录下
 - supervisor 不再把一个全局 `SANDBOX_URL` / `SANDBOX_API_KEY` 当作 remote mode 配置；remote mode 的 URL/API key 必须来自 owner-specific SRT pool
-- repo-local sandbox child wrapper 必须把对外 session `workspacePath` 收口成固定虚拟根 `/workspace`，并只在命令执行前翻译回真实 bot `workspace`；`/state` 约定映射当前 bot `dataDir`
+- repo-local sandbox child wrapper 返回给 FastAgent host/tool 层的 session `workspacePath` 必须保持真实 bot `workspace` 路径；`/workspace` 只允许作为 sandbox 内部 bwrap alias 和命令 `cwd` 虚拟根存在，`/state` 约定映射当前 bot `dataDir`
 - repo-local sandbox child wrapper 除了翻译 `cwd=/workspace|/state` 之外，还必须在最终 bwrap argv 里把真实 bot `workspace` / `data` 额外 bind 到字面 `/workspace` / `/state`；否则 `bash /workspace/...` 和上游文件工具写入的绝对虚拟路径仍会落到不存在或只读的别名上
 - 如果 restored session 在后续命令执行路径里丢失了 WeClaws 注入的内部真实路径 marker，wrapper 仍必须能根据 `workspaceId + SANDBOX_WORKSPACE_MAP_FILE` 恢复真实 bot `workspace`，再继续把 `/state` 推导回同级 `dataDir`；不能把字面 `/workspace` 直接透传给上游 cwd 解析
 - remote sandbox 的主限制必须对目录本身和递归内容同时做 deny-then-allow 收口：`storageRoot`、`instancesRoot`、`SRT_WORKSPACE_BASE_ROOT`、当前 pool `basePath`、`sandbox-runtime-private` 与 `metadataRoot` 都必须进入 deny；否则 session 仍可能通过父目录枚举看到其他 bot、private config 或其他用户的 runtime workspace
@@ -103,7 +103,7 @@
 - sandbox-runtime manager 判断 per-user SRT child 是否可复用时，不能只看 Node child process 是否存在；必须探测 child `/pool/status` 并把 pool stats 与 `lastHealthAt` 写入 status 文件，启动宽限期后探活失败必须重启 child。
 - sandbox-runtime manager 停 per-user SRT child 必须先 `SIGTERM`、等待退出宽限期、再用 `SIGKILL` 兜底；`child.killed` 只能表示信号已发送，不能当作进程已退出。
 - sandbox-runtime manager 的 reconcile / stopAll 必须在 manager 进程内串行执行；interval、file watcher 或 shutdown 不能并发修改 `children` map，也不能并发写同一个 status 临时文件。
-- `srt-child-entry.mjs` 是唯一允许启动 `SandboxAPI` 的子进程入口；它会读取 `SANDBOX_WORKSPACE_MAP_FILE`，把对外 session root 固定成 `/workspace`，并在命令执行前把虚拟 cwd 翻译回真实 bot `workspace` / `data`
+- `srt-child-entry.mjs` 是唯一允许启动 `SandboxAPI` 的子进程入口；它会读取 `SANDBOX_WORKSPACE_MAP_FILE`，保留对外 session root 为真实 bot `workspace`，并在命令执行前把虚拟 cwd `/workspace` / `/state` 翻译回真实 bot `workspace` / `data`
 - child wrapper 还会通过 `NODE_OPTIONS=--import=.../worker-bootstrap.mjs` 给 sandbox worker 预加载 WeClaws bootstrap；这个 bootstrap 只负责在 Linux 下把当前 session 的 `allowWrite` 根追加回最终 bwrap 参数，避免对 `storageRoot`、`instancesRoot`、`SRT_WORKSPACE_BASE_ROOT`、pool `basePath` 等父级目录的 deny 重新把当前 bot 压成只读
 - worker bootstrap 还必须把 `virtualPathAliases` 追加成最终 bwrap `--bind <real> /workspace|/state`；如果上游重建 config 时剥离自定义字段，bootstrap 必须从当前 bot 的 `workspace` / `data` write roots 推导同样的 alias bind，让 sandbox 内命令正文里直接引用 `/workspace/...`、`/state/...` 时也命中当前 bot 的真实目录，而不是只靠 `cwd` 翻译兜底
 - Linux writable rebind 只能插在最终 bwrap argv 的 filesystem bind 阶段末尾、PID namespace 阶段之前；不能简单按 `--` 分隔符回插，否则会把 `--bind` 放到 `--unshare-pid` / `--proc` 之后，直接打坏真实命令执行链

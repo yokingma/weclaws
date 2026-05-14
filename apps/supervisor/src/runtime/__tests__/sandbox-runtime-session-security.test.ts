@@ -15,7 +15,7 @@ afterEach(async () => {
 });
 
 describe('sandbox-runtime session security override', () => {
-  it('redacts the outward workspace path and translates virtual cwd roots back to the real bot scope', async () => {
+  it('keeps the outward workspace path real and translates virtual cwd roots back to the real bot scope', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'weclaws-sandbox-runtime-session-security-'));
     tempDirs.push(dir);
 
@@ -75,7 +75,7 @@ describe('sandbox-runtime session security override', () => {
     const pool = new FakeSandboxProcessPool();
     const { session } = await pool.createSession('user_1', 'ws_1');
 
-    expect(session.workspacePath).toBe(VIRTUAL_WORKSPACE_ROOT);
+    expect(session.workspacePath).toBe(workspacePath);
     await expect(pool.resolveCommandCwd(session, `${VIRTUAL_WORKSPACE_ROOT}/nested`)).resolves.toBe(
       join(workspacePath, 'nested'),
     );

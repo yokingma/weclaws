@@ -175,7 +175,7 @@ WEB_PORT=3000
 - 默认路径还会通过 `AGENT_BROWSER_NPM_VERSION` 固定安装 `agent-browser`；当前公开 Compose 基线只保留 Browserless 远程浏览器路径，不再在 `sandbox-runtime` 镜像内预装本地 Chromium 或执行 `agent-browser install --with-deps`。
 - 默认路径还会通过 `BUN_VERSION`、`PNPM_VERSION`、`UV_VERSION` 固定安装 `bun`、`pnpm` 和 `uv`；当前基线分别是 `1.3.13`、`9.15.4`、`0.11.7`。
 - 运行入口是仓库内的 manager；manager 读取 `srt-pools.json`，为每个 enabled user pool 启动 `srt-child-entry.mjs`。
-- `srt-child-entry.mjs` 会把对外 session workspace root 暴露成 `/workspace`。
+- `srt-child-entry.mjs` 会让 FastAgent host/tool 层继续看到真实 bot workspace root；`/workspace` 只作为 sandbox 内命令别名和 `cwd` 翻译入口存在。
 - Compose 不再给 manager 传全局 `API_KEY`；per-user SRT child 的 API key 由 DB pool config 生成后写入 `srt-pools.json`。
 - 当前仓库接受上游 sandbox-runtime 的网络公开 contract：默认允许外网访问，只通过 `SRT_DEFAULT_DENIED_DOMAINS` 写入新用户 pool 做 denylist 收口。
 - `DATABASE_URL` 和 `INSTANCES_ROOT` 在当前 Compose 文件里固定写成容器内路径，不从 `infra/compose/.env.example` 读取。

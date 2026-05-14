@@ -126,12 +126,12 @@ remote sandbox 模式下，WeClaws 的 wrapper 会再做一层路径虚拟化。
 
 这层别名的目的有两个：
 
-1. 隐藏真实宿主机绝对路径
+1. 让 sandbox 内命令不依赖真实宿主机绝对路径
 2. 把可访问边界收口成固定、稳定、易理解的两个根
 
 当前实现里，这两个别名不再只是“给 `cwd` 翻译用的虚拟字符串”：
 
-- session 对外仍显示 `/workspace`
+- 返回给 FastAgent host/tool 层的 session `workspacePath` 仍是真实 bot `workspaceDir`
 - `resolveCommandCwd()` 仍会把 `cwd=/workspace/...`、`cwd=/state/...` 翻译回真实目录
 - worker bootstrap 还会在最终 bwrap argv 里额外追加 `--bind <realWorkspacePath> /workspace` 与 `--bind <realDataPath> /state`
 - 如果上游 sandbox-runtime 重建 config 时剥离了 WeClaws 的自定义 alias 字段，worker bootstrap 会从当前 bot 的 `workspace` / `data` write roots 兜底推导这两个 alias bind
@@ -276,7 +276,7 @@ remote sandbox 的可见边界不是通过暴露真实父目录来实现的。
 
 当前稳定规则是：
 
-- sandbox 对外只展示 `/workspace` 和 `/state`
+- sandbox 内命令只通过 `/workspace` 和 `/state` 这两个稳定别名访问当前 bot scope；FastAgent host/tool 层仍使用真实 `workspaceDir`
 - 当前 bot 的真实 `workspaceDir`、`dataDir` 与当前 session 的 `stateRoot` 会进入 allow read/write
 - `storage`、`storage/instances`、`storage/sandbox-runtime-private`、`SRT_WORKSPACE_BASE_ROOT`、当前 pool `basePath` 和 `metadataRoot` 必须同时 deny 目录本身与递归内容
 - `/etc/passwd-`、`/etc/shadow-`、`/etc/group*`、`/etc/gshadow*` 以及 `/proc/*/mountinfo`、`/proc/*/mounts`、`/proc/*/mountstats`、`/proc/*/cmdline`、`/proc/*/environ`、`/proc/kallsyms`、cgroup 枚举入口会被 deny，避免命令通过系统元信息还原容器/宿主路径或 bwrap 参数；Linux 下不再直接 deny `/etc/mtab`，因为它是 `/proc/mounts` 的符号链接，硬绑 `/dev/null` 会让 bubblewrap 启动直接失败

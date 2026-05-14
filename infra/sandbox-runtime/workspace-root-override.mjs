@@ -136,7 +136,7 @@ export function installSessionSecurityOverrides({
     const result = await originalCreateSession.apply(this, args);
 
     if (result?.session) {
-      virtualizeSessionPaths(result.session);
+      attachRealSessionPathMarkers(result.session);
     }
 
     return result;
@@ -276,7 +276,7 @@ function readWorkspaceMapDocument(workspaceMapFile) {
   }
 }
 
-function virtualizeSessionPaths(session) {
+function attachRealSessionPathMarkers(session) {
   if (!session || typeof session !== 'object') {
     return session;
   }
@@ -306,7 +306,7 @@ function virtualizeSessionPaths(session) {
     writable: true,
   });
 
-  session.workspacePath = VIRTUAL_WORKSPACE_ROOT;
+  session.workspacePath = realWorkspacePath;
   return session;
 }
 
