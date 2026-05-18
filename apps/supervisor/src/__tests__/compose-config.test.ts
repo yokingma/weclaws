@@ -37,16 +37,16 @@ describe('docker compose supervisor env wiring', () => {
       readFile(versionFilePath, 'utf8'),
     ]);
 
-    expect(versionFile).toContain('SANDBOX_RUNTIME_NPM_VERSION=0.5.6');
+    expect(versionFile).toContain('SANDBOX_RUNTIME_NPM_VERSION=0.5.7');
     expect(composeFile).toContain(
       'SANDBOX_RUNTIME_NPM_VERSION: ${SANDBOX_RUNTIME_NPM_VERSION:-}',
     );
-    expect(composeFile).not.toContain('SANDBOX_RUNTIME_NPM_VERSION:-0.5.6');
+    expect(composeFile).not.toContain('SANDBOX_RUNTIME_NPM_VERSION:-0.5.7');
     expect(dockerfile).toContain('COPY infra/docker/sandbox-runtime.versions.env');
     expect(dockerfile).toContain('. /tmp/sandbox-runtime.versions.env');
-    expect(dockerfile).not.toContain('ARG SANDBOX_RUNTIME_NPM_VERSION=0.5.6');
+    expect(dockerfile).not.toContain('ARG SANDBOX_RUNTIME_NPM_VERSION=0.5.7');
     expect(envExample).toContain('# SANDBOX_RUNTIME_NPM_VERSION=');
-    expect(envExample).not.toContain('# SANDBOX_RUNTIME_NPM_VERSION=0.5.6');
+    expect(envExample).not.toContain('# SANDBOX_RUNTIME_NPM_VERSION=0.5.7');
     expect(envExample).not.toContain('SANDBOX_RUNTIME_IMAGE=');
   });
 
@@ -370,6 +370,8 @@ describe('docker compose supervisor env wiring', () => {
     expect(dockerfile).toContain('lark-cli --version');
     expect(composeFile).toContain('LARK_CLI_NPM_VERSION: ${LARK_CLI_NPM_VERSION:-1.0.32}');
     expect(envExample).toContain('# LARK_CLI_NPM_VERSION=1.0.32');
+    expect(composeFile).toContain('SANDBOX_COMMAND_EXTRA_PATHS: ${SANDBOX_COMMAND_EXTRA_PATHS:-/usr/local/bin}');
+    expect(envExample).toContain('# SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin');
   });
 
   it('passes web runtime env and SRT admin status config into the web container', async () => {

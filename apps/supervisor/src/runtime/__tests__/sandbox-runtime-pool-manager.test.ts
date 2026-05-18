@@ -74,6 +74,7 @@ describe('sandbox-runtime pool manager', () => {
       BROWSERLESS_API_KEY: 'browserless-key',
       BROWSERLESS_API_URL: 'http://browserless:3000',
       PATH: '/usr/bin',
+      SANDBOX_COMMAND_EXTRA_PATHS: '/usr/local/bin',
       SANDBOX_URL: 'http://global-sandbox:8788',
     });
 
@@ -92,6 +93,7 @@ describe('sandbox-runtime pool manager', () => {
       PORT: '31000',
       PORT_RANGE_END: '9199',
       PORT_RANGE_START: '9100',
+      SANDBOX_COMMAND_EXTRA_PATHS: '/usr/local/bin',
       SANDBOX_DEFAULT_ALLOW_WRITE: '/tmp',
       SANDBOX_DEFAULT_DENY_READ: '/etc/passwd',
       SANDBOX_DEFAULT_DENY_WRITE: '.env',

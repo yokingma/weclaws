@@ -29,6 +29,7 @@ services:
       BROWSERLESS_API_URL: ${BROWSERLESS_API_URL:-http://browserless:3000}
       NODE_ENV: production
       LOG_LEVEL: ${SANDBOX_RUNTIME_LOG_LEVEL:-info}
+      SANDBOX_COMMAND_EXTRA_PATHS: ${SANDBOX_COMMAND_EXTRA_PATHS:-/usr/local/bin}
       SRT_POOL_CONFIG_FILE: /app/storage/sandbox-runtime-private/srt-pools.json
       SRT_POOL_STATUS_FILE: /app/storage/sandbox-runtime-private/srt-pool-status.json
       SRT_MANAGER_PORT: ${SANDBOX_RUNTIME_PORT:-8788}
