@@ -98,10 +98,13 @@ export function CreateBotForm({ profiles, quota }: CreateBotFormProps) {
 
   return (
     <form className="grid gap-5" onSubmit={handleSubmit}>
-      <div className="grid gap-6 rounded-[1.85rem] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/90 p-6 shadow-[var(--shadow-panel)]">
+      <div
+        className="grid gap-5 rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5 shadow-none"
+        data-create-bot-panel=""
+      >
         <div className="grid gap-4">
           <div className="grid gap-1.5">
-            <h2 className="m-0 text-xl font-semibold tracking-[-0.02em] text-foreground">
+            <h2 className="m-0 text-lg font-semibold text-foreground">
               {t((messages) => messages.createBot.basicInfo)}
             </h2>
             <p className="m-0 text-sm leading-6 text-muted-foreground">
@@ -147,7 +150,7 @@ export function CreateBotForm({ profiles, quota }: CreateBotFormProps) {
 
         <div className="grid gap-4">
           <div className="grid gap-1.5">
-            <h2 className="m-0 text-xl font-semibold tracking-[-0.02em] text-foreground">
+            <h2 className="m-0 text-lg font-semibold text-foreground">
               {t((messages) => messages.createBot.runtimeConfig)}
             </h2>
             <p className="m-0 text-sm leading-6 text-muted-foreground">
@@ -237,7 +240,10 @@ export function CreateBotForm({ profiles, quota }: CreateBotFormProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 rounded-[1.5rem] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)]/85 px-5 py-4 shadow-[var(--shadow-soft)] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      <div
+        className="grid gap-4 rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)] px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+        data-create-bot-submit-strip=""
+      >
         <p className="m-0 text-sm leading-6 text-muted-foreground">{t((messages) => messages.createBot.intro)}</p>
         <Button
           className="sm:min-w-[12rem]"

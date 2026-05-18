@@ -70,6 +70,7 @@ it('renders one merged summary surface for current runtime status and technical 
   expect(screen.getByText('Alpha')).toBeInTheDocument();
   expect(screen.getByText('anthropic / claude-opus-4-6')).toBeInTheDocument();
   expect(summarySurface).not.toBeNull();
+  expect(summarySurface).toHaveClass('rounded-[var(--radius-panel)]');
   expect(within(summarySurface as HTMLElement).getByText('Current Runtime Status')).toBeInTheDocument();
   expect(within(summarySurface as HTMLElement).getByText('Technical Metadata')).toBeInTheDocument();
   expect(within(summarySurface as HTMLElement).getByText('Process Started')).toBeInTheDocument();

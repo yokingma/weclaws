@@ -67,6 +67,14 @@ it('filters bots by runtime status and search text', async () => {
 
   expect(screen.getByText('3 of 5 bot slots used. 2 remaining.')).toBeInTheDocument();
   expect(screen.getByRole('option', { name: /Unknown/i })).toBeInTheDocument();
+  expect(screen.getByRole('list', { name: 'Bot inventory' })).toBeInTheDocument();
+  expect(document.querySelectorAll('[data-bot-inventory-row]')).toHaveLength(3);
+  expect(document.querySelector('[data-bot-inventory-row] > div')).toHaveClass(
+    'xl:grid-cols-[minmax(12rem,1.35fr)_minmax(7rem,0.65fr)_minmax(7rem,0.65fr)_minmax(12rem,1fr)_minmax(10rem,0.8fr)_auto]'
+  );
+  expect(screen.getByText('Runtime')).toBeInTheDocument();
+  expect(screen.getByText('Desired')).toBeInTheDocument();
+  expect(screen.getAllByText('Workspace').length).toBeGreaterThan(0);
 
   await userEvent.type(screen.getByRole('searchbox'), 'Beta');
   await userEvent.selectOptions(screen.getByRole('combobox'), 'failed');

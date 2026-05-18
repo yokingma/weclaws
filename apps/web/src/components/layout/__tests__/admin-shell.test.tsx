@@ -42,10 +42,18 @@ it('renders an independent admin navigation shell', () => {
   renderShell();
 
   const rail = document.querySelector('[data-admin-shell-nav="rail"]');
+  const main = document.querySelector<HTMLElement>('[data-admin-shell-main]');
+
+  expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main-content');
+  expect(screen.getByRole('main')).toHaveAttribute('id', 'main-content');
   expect(rail).not.toBeNull();
+  expect(main).not.toBeNull();
+  expect(main).not.toHaveClass('shadow-[var(--shadow-soft)]');
   expect(screen.getByRole('link', { name: 'Sandbox Runtime' })).toHaveAttribute('href', '/admin/sandbox-runtime');
+  expect(screen.getByRole('link', { name: 'Sandbox Runtime' })).toHaveAttribute('aria-current', 'page');
   expect(screen.getByRole('link', { name: 'Invites' })).toHaveAttribute('href', '/admin/invites');
   expect(screen.queryByRole('link', { name: 'Create Bot' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: /overview/i })).not.toBeInTheDocument();
   expect(within(rail as HTMLElement).getByText('admin@example.com')).toBeInTheDocument();
   expect(screen.getByText('Admin Content')).toBeInTheDocument();
 });

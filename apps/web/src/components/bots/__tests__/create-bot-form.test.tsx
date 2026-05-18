@@ -64,6 +64,8 @@ it('shows the preserved defaults and grouped runtime fields', () => {
   expect(screen.getByText('1 of 2 bot slots used. 1 remaining.')).toBeInTheDocument();
   expect(container.querySelector('[data-create-bot-label]')).toHaveTextContent('Bot Name *');
   expect(container.querySelectorAll('[data-required-indicator]')).toHaveLength(1);
+  expect(container.querySelector('[data-create-bot-panel]')).not.toHaveClass('shadow-[var(--shadow-panel)]');
+  expect(container.querySelector('[data-create-bot-submit-strip]')).not.toHaveClass('shadow-[var(--shadow-soft)]');
   expect(screen.getByText('Runtime Config')).toBeInTheDocument();
 });
 

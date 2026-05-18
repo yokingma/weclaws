@@ -19,7 +19,7 @@ export function PageHeader({ actions, className, description, eyebrow, title }: 
           </p>
         ) : null}
         <div className="grid gap-3">
-          <h1 className="m-0 text-3xl font-semibold tracking-[-0.03em] text-foreground lg:text-[2.9rem]">
+          <h1 className="m-0 text-3xl font-semibold text-foreground lg:text-[2.9rem]">
             {title}
           </h1>
           {description ? (

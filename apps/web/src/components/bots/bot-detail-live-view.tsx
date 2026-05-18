@@ -8,6 +8,7 @@ import type { LlmProfileItem } from '@/lib/llm-profiles';
 import { BotDetailHeader } from './bot-detail-header';
 import { BotEventsList } from './bot-events-list';
 import { BotQrSharePanel } from './bot-qr-share-panel';
+import { BotWorkspacePreviews } from './bot-workspace-previews';
 
 interface BotDetailLiveViewProps {
   initialBot: BotDetailItem;
@@ -60,7 +61,7 @@ export function BotDetailLiveView({ initialBot, initialEvents, profiles }: BotDe
   }, [initialBot.id]);
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-5">
       <BotDetailHeader
         bot={bot}
         onBotUpdated={(nextBot) => {
@@ -69,8 +70,8 @@ export function BotDetailLiveView({ initialBot, initialEvents, profiles }: BotDe
         profiles={profiles}
       />
       {streamErrorMessage ? <ErrorNotice>{streamErrorMessage}</ErrorNotice> : null}
-      <div className="grid gap-6 xl:grid-cols-[minmax(20rem,0.95fr)_minmax(0,1.05fr)]">
-        <aside aria-label={t((messages) => messages.botDetail.controlsRegion)} className="grid content-start gap-6">
+      <div className="grid gap-5 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)]">
+        <aside aria-label={t((messages) => messages.botDetail.controlsRegion)} className="grid content-start gap-5">
           <BotQrSharePanel
             bot={bot}
             onBotUpdated={(nextBot) => {
@@ -79,10 +80,11 @@ export function BotDetailLiveView({ initialBot, initialEvents, profiles }: BotDe
           />
         </aside>
 
-        <section aria-label={t((messages) => messages.botDetail.activityRegion)} className="grid content-start gap-6">
+        <section aria-label={t((messages) => messages.botDetail.activityRegion)} className="grid content-start gap-5">
           <BotEventsList events={events} />
         </section>
       </div>
+      <BotWorkspacePreviews />
     </div>
   );
 }

@@ -33,7 +33,7 @@ export function BotEventsList({ events }: BotEventsListProps) {
       title={t((messages) => messages.botDetail.recentEvents)}
     >
       {events.length === 0 ? (
-        <div className="rounded-[1.25rem] border border-dashed border-[color:var(--border-strong)]/75 bg-[color:var(--surface-muted)]/74 px-5 py-6">
+        <div className="rounded-[var(--radius-panel)] border border-dashed border-[color:var(--border-soft)] bg-[color:var(--surface-muted)] px-4 py-5">
           <p className="m-0 text-sm leading-6 text-muted-foreground">{t((messages) => messages.botDetail.noEvents)}</p>
         </div>
       ) : (
@@ -65,7 +65,7 @@ export function BotEventsList({ events }: BotEventsListProps) {
           <ol className="grid gap-2">
             {visibleEvents.map((event) => (
               <li
-                className="grid list-none grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[1rem] border border-[color:var(--border-soft)]/80 bg-[color:var(--surface-muted)]/76 px-3 py-2"
+                className="grid list-none grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[var(--radius-control)] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)] px-3 py-2"
                 data-event-row=""
                 key={event.id}
               >

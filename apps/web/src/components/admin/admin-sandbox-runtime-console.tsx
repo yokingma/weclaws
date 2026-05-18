@@ -334,7 +334,8 @@ export function AdminSandboxRuntimeConsole({ initialData }: AdminSandboxRuntimeC
 
           return (
             <article
-              className="grid gap-3 rounded-[1.2rem] border border-[color:var(--border-soft)]/80 bg-[color:var(--surface-muted)]/64 p-4 md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)_auto] md:items-center"
+              className="grid gap-3 rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-4 md:grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)_auto] md:items-center"
+              data-srt-pool-row=""
               key={pool.ownerUserId}
             >
               <div className="grid gap-2">
@@ -554,7 +555,7 @@ interface ResourceMetricProps {
 
 function ResourceMetric({ icon, label, value }: ResourceMetricProps) {
   return (
-    <div className="grid gap-2 rounded-[1rem] border border-[color:var(--border-soft)]/70 bg-[color:var(--surface-muted)]/64 p-4">
+    <div className="grid gap-2 rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-4">
       <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--text-soft)]">
         {icon}
         {label}

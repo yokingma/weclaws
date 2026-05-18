@@ -30,7 +30,7 @@ export default async function NewBotPage() {
         title={messages.createBot.pageTitle}
       />
 
-      <div className="rounded-[1.6rem] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/78 px-5 py-4 text-sm leading-7 text-muted-foreground shadow-[var(--shadow-soft)]">
+      <div className="rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-4 py-3 text-sm leading-6 text-muted-foreground">
         {messages.createBot.intro}
       </div>
 

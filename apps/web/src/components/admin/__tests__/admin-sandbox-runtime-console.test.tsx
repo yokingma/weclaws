@@ -24,6 +24,7 @@ it('shows manager and per-pool resource status without exposing API keys', () =>
 
   expect(screen.getByText('Sandbox Runtime Pools')).toBeInTheDocument();
   expect(screen.getByText('owner@example.com')).toBeInTheDocument();
+  expect(document.querySelector('[data-srt-pool-row]')).not.toBeNull();
   expect(screen.getByText('12.5%')).toBeInTheDocument();
   expect(screen.getByText('244.1 MB')).toBeInTheDocument();
   expect(screen.getByText('31000')).toBeInTheDocument();

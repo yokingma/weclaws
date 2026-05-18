@@ -65,6 +65,7 @@ it('renders invite usage states for existing records', () => {
   expect(screen.getByText('Reserved')).toBeInTheDocument();
   expect(screen.getByText('pending@example.com')).toBeInTheDocument();
   expect(screen.getByText('Used')).toBeInTheDocument();
+  expect(document.querySelectorAll('[data-invite-audit-row]')).toHaveLength(3);
   expect(screen.getAllByText('admin@example.com')).toHaveLength(3);
   expect(screen.getByText('member@example.com')).toBeInTheDocument();
   expect(screen.queryByText('admin_1')).not.toBeInTheDocument();

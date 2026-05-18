@@ -75,7 +75,7 @@ export function BotsConsole({ bots, quota }: BotsConsoleProps) {
   if (botItems.length === 0) {
     return (
       <div className="grid gap-6">
-        <div className="rounded-[1.45rem] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)]/82 px-5 py-4 text-sm leading-6 text-muted-foreground shadow-[var(--shadow-soft)]">
+        <div className="rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-4 py-3 text-sm leading-6 text-muted-foreground">
           {quotaSummary}
         </div>
         <EmptyState
@@ -92,12 +92,12 @@ export function BotsConsole({ bots, quota }: BotsConsoleProps) {
   }
 
   return (
-    <div className="grid gap-8">
-      <div className="rounded-[1.45rem] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)]/82 px-5 py-4 text-sm leading-6 text-muted-foreground shadow-[var(--shadow-soft)]">
+    <div className="grid gap-6">
+      <div className="rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-4 py-3 text-sm leading-6 text-muted-foreground">
         {quotaSummary}
       </div>
       <BotOverviewStats bots={botItems} />
-      <div className="grid gap-5">
+      <div className="grid gap-4">
         <BotFilterBar
           onSearchQueryChange={setSearchQuery}
           onStatusFilterChange={(nextValue) => setStatusFilter(nextValue as RuntimeFilterValue)}

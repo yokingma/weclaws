@@ -59,13 +59,13 @@ export function AccountMenu({ align = 'start', className, email, isAdmin = false
         <button
           aria-label={t((messages) => messages.shell.openAccountMenu)}
           className={cn(
-            'group flex w-full items-center justify-between gap-3 rounded-[1.35rem] border border-[color:var(--border-soft)]/60 bg-[color:var(--surface)]/70 px-3.5 py-3.5 text-left shadow-[var(--shadow-soft)] transition-[border-color,background-color,box-shadow] hover:border-[color:var(--border-strong)]/75 hover:bg-[color:var(--surface)]/82 hover:shadow-[var(--shadow-raise)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+            'group flex w-full items-center justify-between gap-3 rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-3 py-3 text-left transition-[border-color,background-color] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             className
           )}
           type="button"
         >
           <span className="flex min-w-0 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[1rem] bg-[color:var(--accent-strong)] text-sm font-semibold text-[color:var(--accent-contrast)] shadow-[var(--shadow-raise)]">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--radius-control)] bg-[color:var(--accent-strong)] text-sm font-semibold text-[color:var(--accent-contrast)]">
               {monogram}
             </span>
             <span className="grid min-w-0 gap-0.5">
@@ -78,7 +78,7 @@ export function AccountMenu({ align = 'start', className, email, isAdmin = false
             </span>
           </span>
 
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[0.9rem] bg-[color:var(--surface-muted)] text-[color:var(--text-soft)] transition-colors group-hover:text-foreground">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--radius-control)] bg-[color:var(--surface-muted)] text-[color:var(--text-soft)] transition-colors group-hover:text-foreground">
             <ChevronDown className="h-4 w-4" />
           </span>
         </button>

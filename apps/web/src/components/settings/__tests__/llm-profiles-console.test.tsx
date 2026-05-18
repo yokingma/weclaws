@@ -77,6 +77,8 @@ it('updates an existing profile without resending the stored api key', async () 
     { locale: 'en' }
   );
 
+  expect(document.querySelector('[data-llm-profile-row]')).not.toBeNull();
+
   await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
   await userEvent.clear(screen.getByLabelText('Profile Name'));
   await userEvent.type(screen.getByLabelText('Profile Name'), 'Primary v2');

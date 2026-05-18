@@ -9,14 +9,14 @@ export function LanguageSwitcher() {
 
   return (
     <div
-      className="inline-flex h-9 items-center rounded-[0.95rem] border border-[color:var(--border-soft)] bg-[color:var(--surface)]/88 p-0.5 shadow-[var(--shadow-soft)]"
+      className="inline-flex h-9 items-center rounded-[var(--radius-control)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-0.5"
       data-toolbar-control="language"
     >
       <Button
         className={cn(
           'h-8 rounded-[0.7rem] px-3 text-[11px] tracking-[0.01em]',
           locale === 'zh-CN'
-            ? 'bg-[color:var(--surface-elevated)] text-foreground shadow-[0_8px_18px_rgba(54,40,27,0.08)]'
+            ? 'bg-[color:var(--accent-soft)] text-foreground'
             : 'text-muted-foreground hover:bg-transparent hover:text-foreground'
         )}
         onClick={() => setLocale('zh-CN')}
@@ -30,7 +30,7 @@ export function LanguageSwitcher() {
         className={cn(
           'h-8 rounded-[0.7rem] px-3 text-[11px] tracking-[0.01em]',
           locale === 'en'
-            ? 'bg-[color:var(--surface-elevated)] text-foreground shadow-[0_8px_18px_rgba(54,40,27,0.08)]'
+            ? 'bg-[color:var(--accent-soft)] text-foreground'
             : 'text-muted-foreground hover:bg-transparent hover:text-foreground'
         )}
         onClick={() => setLocale('en')}

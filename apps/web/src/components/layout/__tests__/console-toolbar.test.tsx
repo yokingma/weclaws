@@ -40,6 +40,8 @@ it('shows a utility-only header without mixing admin navigation into the user wo
   const themeControl = banner.querySelector('[data-toolbar-control="theme"]');
   const languageControl = banner.querySelector('[data-toolbar-control="language"]');
 
+  expect(banner).toHaveAttribute('data-console-toolbar');
+  expect(banner).not.toHaveClass('shadow-[var(--shadow-soft)]');
   expect(within(banner).queryByText('WeClaws')).not.toBeInTheDocument();
   expect(within(banner).queryByAltText('WeClaws logo')).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Light' })).toBeInTheDocument();

@@ -29,16 +29,19 @@ export function BotOverviewStats({ bots }: BotOverviewStatsProps) {
   ];
 
   return (
-    <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <section
+      aria-label={t((messages) => messages.botsList.pageTitle)}
+      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+    >
       {stats.map((stat) => (
         <div
-          className="grid gap-2 rounded-[1.45rem] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)]/82 px-5 py-4 shadow-[var(--shadow-soft)]"
+          className="grid gap-1.5 rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-4 py-3 shadow-none"
           key={stat.label}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--text-soft)]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-soft)]">
             {stat.label}
           </span>
-          <strong className="text-3xl font-semibold tracking-[-0.03em] text-foreground">{stat.value}</strong>
+          <strong className="text-2xl font-semibold text-foreground">{stat.value}</strong>
         </div>
       ))}
     </section>

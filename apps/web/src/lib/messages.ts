@@ -21,6 +21,7 @@ export const messages = {
       languageEnglish: 'English',
       themeLight: '浅色',
       themeDark: '深色',
+      skipToMain: '跳到主内容',
     },
     auth: {
       email: '邮箱',
@@ -70,6 +71,10 @@ export const messages = {
       updated: '更新于',
       created: '创建于',
       workspace: '工作区',
+      inventoryLabel: 'Bot 清单',
+      runtimeColumn: '运行状态',
+      desiredColumn: '目标状态',
+      modelColumn: '模型',
     },
     createBot: {
       pageTitle: '创建 Bot',
@@ -236,6 +241,11 @@ export const messages = {
       profileSwitchFailed: '切换 LLM Profile 失败。',
       activityRegion: '实时活动',
       controlsRegion: 'Bot 控制台',
+      sessionsPreviewTitle: '会话预览',
+      sessionsPreviewDescription: '后续会在这里展示机器人最近会话、消息摘要和接管入口。',
+      workspaceFilesPreviewTitle: '工作区文件预览',
+      workspaceFilesPreviewDescription: '后续会在这里展示机器人工作区文件、产物和可预览内容。',
+      previewComingSoon: '预留区域',
     },
     adminInvites: {
       pageTitle: '邀请码管理',
@@ -336,6 +346,7 @@ export const messages = {
       languageEnglish: 'English',
       themeLight: 'Light',
       themeDark: 'Dark',
+      skipToMain: 'Skip to main content',
     },
     auth: {
       email: 'Email',
@@ -385,6 +396,10 @@ export const messages = {
       updated: 'Updated',
       created: 'Created',
       workspace: 'Workspace',
+      inventoryLabel: 'Bot inventory',
+      runtimeColumn: 'Runtime',
+      desiredColumn: 'Desired',
+      modelColumn: 'Model',
     },
     createBot: {
       pageTitle: 'Create Bot',
@@ -551,6 +566,11 @@ export const messages = {
       profileSwitchFailed: 'Profile switch failed.',
       activityRegion: 'Live Activity',
       controlsRegion: 'Bot Controls',
+      sessionsPreviewTitle: 'Sessions Preview',
+      sessionsPreviewDescription: 'Recent bot conversations, message summaries, and handoff entry points will appear here later.',
+      workspaceFilesPreviewTitle: 'Workspace Files Preview',
+      workspaceFilesPreviewDescription: 'Workspace files, generated artifacts, and previewable outputs will appear here later.',
+      previewComingSoon: 'Reserved area',
     },
     adminInvites: {
       pageTitle: 'Invite Management',

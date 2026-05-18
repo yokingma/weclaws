@@ -45,10 +45,15 @@ it('keeps account identity out of the top toolbar and renders it in the left rai
   const rail = document.querySelector('[data-shell-nav="rail"]');
   const railBottom = rail?.querySelector('[data-shell-nav-bottom]');
 
+  expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main-content');
+  expect(screen.getByRole('main')).toHaveAttribute('id', 'main-content');
   expect(within(screen.getByRole('banner')).queryByText('admin@example.com')).not.toBeInTheDocument();
   expect(rail).not.toBeNull();
   expect(railBottom).not.toBeNull();
   expect(within(railBottom as HTMLElement).getByText('admin@example.com')).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: /overview/i })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: /sessions/i })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: /files/i })).not.toBeInTheDocument();
 });
 
 it('renders the account card inside the mobile navigation sheet', async () => {
@@ -71,13 +76,17 @@ it('uses document scrolling while keeping the desktop rail fixed in the viewport
 
   const shellFrame = document.querySelector<HTMLElement>('[data-shell-frame]');
   const rail = document.querySelector<HTMLElement>('[data-shell-rail]');
+  const main = document.querySelector<HTMLElement>('[data-shell-main]');
   const scrollRegion = document.querySelector<HTMLElement>('[data-shell-scroll-region]');
 
   expect(shellFrame).not.toBeNull();
   expect(rail).not.toBeNull();
+  expect(main).not.toBeNull();
   expect(scrollRegion).toBeNull();
   expect(shellFrame).not.toHaveClass('lg:h-screen', 'lg:overflow-hidden');
-  expect(rail).toHaveClass('lg:fixed', 'lg:h-[calc(100vh-2.5rem)]');
+  expect(shellFrame).toHaveClass('lg:grid-cols-[248px_minmax(0,1fr)]');
+  expect(rail).toHaveClass('lg:fixed', 'lg:h-[calc(100vh-2rem)]');
+  expect(main).not.toHaveClass('shadow-[var(--shadow-soft)]');
 });
 
 it('keeps Bots as a light selected nav item while preserving the Create Bot primary action', () => {
@@ -87,6 +96,7 @@ it('keeps Bots as a light selected nav item while preserving the Create Bot prim
   const createBotLink = screen.getByRole('link', { name: 'Create Bot' });
   const createBotButton = within(createBotLink).getByRole('button', { name: 'Create Bot' });
 
+  expect(botsLink).toHaveAttribute('aria-current', 'page');
   expect(botsLink).toHaveClass('border-[color:var(--border-soft)]/80', 'bg-[color:var(--surface-elevated)]/88', 'text-foreground');
   expect(botsLink).not.toHaveClass('bg-[color:var(--accent-strong)]', 'text-[color:var(--accent-contrast)]');
   expect(createBotButton).toBeInTheDocument();

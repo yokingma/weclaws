@@ -41,7 +41,7 @@ export function BotRenameControl({ bot, onBotUpdated }: BotRenameControlProps) {
     return (
       <span className="group relative inline-flex min-w-0">
         <button
-          className="cursor-pointer text-left text-xl font-semibold tracking-[-0.02em] text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
+          className="cursor-pointer text-left text-xl font-semibold text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
           onClick={() => {
             setDraftName(bot.name);
             setErrorMessage(null);

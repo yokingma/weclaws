@@ -21,7 +21,11 @@
 - [`src/components/auth/sign-up-form.tsx`](./src/components/auth/sign-up-form.tsx) 的注册字段顺序固定为 `email -> password -> inviteCode`；只有 `email` 和 `password` 显示可见的必填标识，`inviteCode` 保持可选输入，且不要让这个视觉标识破坏原始字段可访问名称
 - 共享展示容器优先复用 [`src/components/layout/page-header.tsx`](./src/components/layout/page-header.tsx)、[`src/components/layout/section-card.tsx`](./src/components/layout/section-card.tsx) 和 [`src/components/layout/empty-state.tsx`](./src/components/layout/empty-state.tsx)，避免重新回到 inline-style 页面
 - 全局 token 现在区分 `app-bg / app-panel / surface / surface-elevated / surface-muted`，页面层级优先靠留白、字重和弱对比表面建立，而不是靠厚重边框
-- 认证页和登录后控制台必须共享同一张暖色背景画布；分层优先靠透明度、阴影和弱描边，不要再回到明显“外层背景 vs 内层大盒子”的割裂做法
+- 登录后的用户控制台和管理台采用中性企业面板视觉：页面背景、panel、列表行和工具条使用语义 token，避免暖色玻璃背景、大圆角嵌套卡片和厚重阴影
+- 主内容区不再作为单个大浮层卡片承载所有页面；页面级模块通过 `WorkspacePanel`、`SectionCard` 和紧凑列表行建立层级
+- 创建 bot 表单也属于登录后控制台视觉范围；表单主面板和提交条必须继续使用中性企业 panel token，不要退回旧式重阴影大卡片
+- 企业后台文字排版不要使用负字距；共享品牌锁定、页面标题和列表内 bot 名称都应保持默认字距以降低视觉漂移
+- 认证页可以保留独立的产品访问画布；登录后的控制台和管理台必须使用中性企业面板语义 token，分层优先靠留白、边框和字重，不靠暖色玻璃背景或厚重阴影
 - 真实深浅色切换只允许改语义 token，不允许在页面组件里堆 if/else 兼容 class
 
 ## Internationalization
@@ -123,6 +127,7 @@
 - 桌面端账号卡固定在左 rail 最底部；移动端账号卡放进导航 sheet 最底部，账号信息不回到顶部工具条
 - `AccountMenu` 里只有 `Details` 继续保持禁用占位；`Settings` 必须跳转到真实的 `/settings` 页面，`Logout` 继续通过 Better Auth client `signOut` 成功后跳转 `/login`
 - Claude 风格列表页保持“页头 + 概览带 + 筛选条 + 主列表”的层级；overview stats 是轻量 summary strip，不再做成与主内容同权重的重卡片
+- 第一版企业面板不提供独立 Overview 路由，也不渲染 `Overview / Sessions / Files / Knowledge / Members / Audit Logs` 这类未落地导航；`/bots` 承担首页级 Bot inventory 和轻量概览职责
 - runtime status filter 只按 `status` 字段工作；`desiredState` 在列表页仍然是展示信息，不参与筛选
 - 当列表里出现未知 runtime 值时，filter UI 可以暴露 `unknown` 选项，但 overview stats 仍只统计已知 bucket
 - create bot 页的 runtime 配置摘要来自当前选中的 LLM profile；浏览器提交必须显式携带 `name + llmProfileId`，`provider / model` 从 profile snapshot 写入 `bot_instances`
@@ -180,6 +185,7 @@
 - 详情页工作区现在固定为“双栏主次结构”：
   - 左栏是 `Bot Controls` complementary region，用于二维码与分享模块
   - 右栏是 `Live Activity` region，用于最近事件
+- bot 详情页的会话预览和工作区文件预览当前是静态预留区，不读取文件系统、不新增 session/file API，也不改变 [`src/components/bots/bot-detail-live-view.tsx`](./src/components/bots/bot-detail-live-view.tsx) 作为唯一 EventSource owner 的边界
 - [`src/components/bots/bot-qr-share-panel.tsx`](./src/components/bots/bot-qr-share-panel.tsx) 是详情页二维码与分享的唯一 owner 侧模块：只在 `waiting_for_qr` 展示当前二维码，提供确认后的 `Reissue QR` intent，并组合 [`src/components/bots/bot-qr-share-controls.tsx`](./src/components/bots/bot-qr-share-controls.tsx) 的公开分享开关和复制链接；该模块在左侧控制栏内必须保持单列满宽流，不要在模块内部再拆二维码/分享两列并排
 - [`src/components/bots/qr-code-panel.tsx`](./src/components/bots/qr-code-panel.tsx) 在详情页内使用 compact 模式，二维码区域只保留当前二维码、二维码 ID 和同一行动作组，不重复渲染模块标题、来源说明或预览说明；`Open QR page` 与 `Reissue QR` 必须放在同一个 actions group 中，窄屏允许自动换行
 - 详情页二维码只在 `status=waiting_for_qr` 时展示；即使数据库里仍保留最近一次 `lastQrCode*`，bot 进入 `running` / `degraded` / `stopped` 后也不能继续把旧二维码展示给用户

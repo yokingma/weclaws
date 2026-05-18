@@ -169,6 +169,8 @@ it('renders primary actions in the header and separates qr sharing from runtime 
   const controlsRegion = screen.getByRole('complementary', { name: 'Bot Controls' });
   const headerActions = screen.getByRole('region', { name: 'Bot Header Actions' });
   const qrShareRegion = screen.getByRole('region', { name: 'QR Code and Share' });
+  const sessionsRegion = screen.getByRole('region', { name: 'Sessions Preview' });
+  const filesRegion = screen.getByRole('region', { name: 'Workspace Files Preview' });
 
   expect(within(controlsRegion).queryByText('Runtime Summary')).not.toBeInTheDocument();
   expect(within(headerActions).getByRole('button', { name: 'Start' })).toBeInTheDocument();
@@ -186,9 +188,13 @@ it('renders primary actions in the header and separates qr sharing from runtime 
   expect(within(qrActions).getByRole('link', { name: 'Open QR page' })).toBeInTheDocument();
   expect(within(qrActions).getByRole('button', { name: 'Reissue QR' })).toBeInTheDocument();
   expect(within(activityRegion).getByText('Recent Events')).toBeInTheDocument();
+  expect(within(sessionsRegion).getByText(/Recent bot conversations/i)).toBeInTheDocument();
+  expect(within(filesRegion).getByText(/generated artifacts/i)).toBeInTheDocument();
   expect(within(activityRegion).queryByText('Technical Metadata')).not.toBeInTheDocument();
   expect(within(controlsRegion).queryByText('Technical Metadata')).not.toBeInTheDocument();
   expect(screen.queryByRole('combobox', { name: 'LLM Profile' })).not.toBeInTheDocument();
+  expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/sessions') || String(input).includes('/files'))).toBe(false);
+  expect(globalThis.EventSource).toHaveBeenCalledTimes(1);
 
   await userEvent.click(within(qrShareRegion).getByRole('button', { name: 'Reissue QR' }));
   expect(fetchMock).not.toHaveBeenCalledWith('/api/bots/bot_1/reissue-qr', {

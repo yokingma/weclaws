@@ -134,13 +134,13 @@ export function BotDetailHeader({ bot, onBotUpdated, profiles }: BotDetailHeader
   ];
 
   return (
-    <section className="grid gap-5 rounded-[1.9rem] border border-[color:var(--border-soft)]/80 bg-[color:var(--surface)]/82 p-6 shadow-[var(--shadow-panel)]">
+    <section className="grid gap-4 rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5 shadow-none">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="grid gap-3">
-          <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-soft)]">
+          <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-soft)]">
             {t((messages) => messages.botDetail.headerDescription)}
           </p>
-          <h2 className="m-0 text-3xl font-semibold tracking-[-0.03em] text-foreground lg:text-[2.6rem]">{bot.name}</h2>
+          <h2 className="m-0 text-2xl font-semibold text-foreground lg:text-3xl">{bot.name}</h2>
           <p className="m-0 text-sm leading-6 text-muted-foreground">
             {bot.provider} / {bot.model}
           </p>
@@ -246,7 +246,7 @@ export function BotDetailHeader({ bot, onBotUpdated, profiles }: BotDetailHeader
           {syncMessage ? (
             <p
               aria-live="polite"
-              className="m-0 max-w-[34rem] rounded-[1rem] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)]/72 px-3 py-2 text-sm text-[color:var(--text-soft)]"
+              className="m-0 max-w-[34rem] rounded-[var(--radius-control)] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)] px-3 py-2 text-sm text-[color:var(--text-soft)]"
             >
               {syncMessage}
             </p>
@@ -255,11 +255,11 @@ export function BotDetailHeader({ bot, onBotUpdated, profiles }: BotDetailHeader
       </div>
 
       <div
-        className="grid gap-5 rounded-[1.5rem] border border-[color:var(--border-soft)]/75 bg-[color:var(--surface-muted)]/82 p-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]"
+        className="grid gap-4 rounded-[var(--radius-panel)] border border-[color:var(--border-soft)] bg-[color:var(--surface-muted)] p-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]"
         data-bot-detail-summary=""
       >
         <div className="grid gap-4">
-          <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-soft)]">
+          <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-soft)]">
             {t((messages) => messages.botDetail.currentRuntimeStatus)}
           </p>
           <dl className="grid gap-3 sm:grid-cols-2">
@@ -274,8 +274,8 @@ export function BotDetailHeader({ bot, onBotUpdated, profiles }: BotDetailHeader
           </dl>
         </div>
 
-        <div className="grid gap-4 border-t border-[color:var(--border-soft)]/70 pt-5 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
-          <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-soft)]">
+        <div className="grid gap-4 border-t border-[color:var(--border-soft)] pt-4 xl:border-l xl:border-t-0 xl:pl-4 xl:pt-0">
+          <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-soft)]">
             {t((messages) => messages.botDetail.metadata)}
           </p>
           <dl className="grid gap-3 sm:grid-cols-2">

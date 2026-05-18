@@ -11,7 +11,7 @@ const BRAND_VARIANTS = {
   },
   rail: {
     frame: 'h-11 w-11 rounded-[1.1rem]',
-    label: 'text-[22px] font-black normal-case tracking-[-0.045em] text-foreground',
+    label: 'text-[22px] font-black normal-case text-foreground',
   },
 } as const;
 

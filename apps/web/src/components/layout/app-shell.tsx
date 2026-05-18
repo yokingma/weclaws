@@ -40,16 +40,16 @@ function AppShellNav({ email, isAdmin, layout }: AppShellNavProps) {
   const isBotsRoute = pathname === '/bots' || pathname.startsWith('/bots/');
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-8" data-shell-nav={layout}>
-      <div className="grid gap-8">
-        <div className="grid gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-6" data-shell-nav={layout}>
+      <div className="grid gap-6">
+        <div className="grid gap-3">
           <BrandLockup
             className="items-center gap-4"
             labelClassName="leading-none"
             variant="rail"
           />
           <div className="grid gap-1.5">
-            <strong className="text-xl font-semibold tracking-[-0.02em] text-foreground">
+            <strong className="text-xl font-semibold text-foreground">
               {t((messages) => messages.shell.workspaceTitle)}
             </strong>
             <span className="max-w-[18rem] text-sm leading-6 text-muted-foreground">
@@ -60,11 +60,12 @@ function AppShellNav({ email, isAdmin, layout }: AppShellNavProps) {
 
         <nav aria-label={t((messages) => messages.shell.workspaceTitle)} className="grid gap-3">
           <Link
+            aria-current={isBotsRoute ? 'page' : undefined}
             className={cn(
-              'flex items-center gap-2 rounded-[1.15rem] px-4 py-3 text-sm font-medium transition-[background-color,color,box-shadow,border-color]',
+              'flex items-center gap-2 rounded-[var(--radius-control)] px-3 py-2.5 text-sm font-medium transition-[background-color,color,border-color]',
               isBotsRoute
                 ? 'border border-[color:var(--border-soft)]/80 bg-[color:var(--surface-elevated)]/88 text-foreground shadow-none'
-                : 'bg-[color:var(--surface)]/64 text-foreground hover:bg-[color:var(--surface)]/78'
+                : 'bg-transparent text-muted-foreground hover:bg-[color:var(--surface-muted)] hover:text-foreground'
             )}
             href="/bots"
           >
@@ -116,26 +117,35 @@ export function AppShell({ children, email, fastAgentCliVersion, isAdmin }: AppS
   );
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--chrome-glow-left),transparent_38%),radial-gradient(circle_at_top_right,var(--chrome-glow-right),transparent_30%),radial-gradient(circle_at_bottom_center,var(--chrome-glow-bottom),transparent_40%)]" />
+    <div className="min-h-screen bg-background">
+      <a
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-[var(--radius-control)] focus:bg-[color:var(--surface)] focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:ring-2 focus:ring-ring"
+        href="#main-content"
+      >
+        {t((messages) => messages.shell.skipToMain)}
+      </a>
       <div
-        className="relative mx-auto grid min-h-screen max-w-[1480px] gap-5 px-4 py-4 lg:grid-cols-[260px_minmax(0,1fr)] lg:px-6 lg:py-5"
+        className="mx-auto grid min-h-screen max-w-[1480px] gap-4 px-4 py-4 lg:grid-cols-[248px_minmax(0,1fr)] lg:px-6"
         data-shell-frame=""
         style={shellFrameStyle}
       >
         <aside className="hidden lg:block">
           <div
-            className="flex flex-col rounded-[var(--radius-shell)] border border-[color:var(--border-soft)]/40 bg-[color:var(--app-panel)]/46 p-5 shadow-[var(--shadow-soft)] backdrop-blur-xl lg:fixed lg:left-[var(--shell-rail-left)] lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:w-[260px]"
+            className="flex flex-col rounded-[var(--radius-shell)] border border-[color:var(--border-soft)] bg-[color:var(--app-panel)] p-4 lg:fixed lg:left-[var(--shell-rail-left)] lg:top-4 lg:h-[calc(100vh-2rem)] lg:w-[248px]"
             data-shell-rail=""
           >
             <AppShellNav email={email} isAdmin={isAdmin} layout="rail" />
           </div>
         </aside>
 
-        <div className="grid min-h-screen content-start gap-5">
+        <div className="grid min-h-screen content-start gap-4">
           <ConsoleToolbar fastAgentCliVersion={fastAgentCliVersion} navigation={mobileNavigation} />
 
-          <main className="grid content-start gap-8 rounded-[calc(var(--radius-shell)+0.1rem)] border border-[color:var(--border-soft)]/38 bg-[color:var(--surface)]/54 px-4 py-6 shadow-[var(--shadow-soft)] backdrop-blur-xl lg:px-8 lg:py-8">
+          <main
+            className="grid content-start gap-6 py-2 lg:py-3"
+            data-shell-main=""
+            id="main-content"
+          >
             {children}
           </main>
         </div>
