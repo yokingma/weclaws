@@ -20,3 +20,7 @@ storage/supervisor.lock
 !storage/instances/.gitkeep
 !.env.example
 .DS_Store
+
+.playwright-*/
+__pycache__/
+*.log
