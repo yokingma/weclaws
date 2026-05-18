@@ -8,6 +8,7 @@ FROM node:20-bookworm
 
 ENV NODE_ENV=production
 ENV PATH="/usr/local/bin:${PATH}"
+ENV SANDBOX_COMMAND_EXTRA_PATHS="/usr/local/bin"
 
 ARG TARGETARCH
 ARG SANDBOX_RUNTIME_NPM_VERSION

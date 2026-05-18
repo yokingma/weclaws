@@ -92,7 +92,7 @@
 - CNB 远程 `sandbox-runtime` 发布任务如果显式传入 `AGENT_BROWSER_NPM_VERSION`，必须与 `infra/docker/sandbox-runtime.Dockerfile` 的默认值保持一致，并由 `compose-config` 回归测试锁住；不能让远程镜像 build-arg 覆盖回旧版本
 - CNB 远程 `sandbox-runtime` 发布任务如果显式传入 `LARK_CLI_NPM_VERSION`，也必须与 `infra/docker/sandbox-runtime.Dockerfile` 的默认值保持一致，并由 `compose-config` 回归测试锁住；不能让远程镜像 build-arg 静默漂到不同的 Feishu/Lark CLI 基线
 - Compose 默认还会通过 `BUN_VERSION`、`PNPM_VERSION`、`UV_VERSION` 固定额外预装的 JS / Python 工具链基线；当前默认分别是 `bun@1.3.13`、`pnpm@9.15.4`、`uv@0.11.7`
-- 上游 `sandbox-runtime` 现在只给 session command 注入系统目录 PATH 基线；Compose 必须额外透传 `SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin` 给 per-user SRT child，才能让镜像里通过 npm/curl 安装到 `/usr/local/bin` 的 `lark-cli`、`bun`、`pnpm`、`uv` 等 CLI 在 sandbox 命令执行里继续可见
+- 上游 `sandbox-runtime` 现在只给 session command 注入系统目录 PATH 基线；`sandbox-runtime` 镜像自身必须默认导出 `SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin`，Compose 也必须显式透传同一个值给 per-user SRT child，才能让镜像里通过 npm/curl 安装到 `/usr/local/bin` 的 `node`、`lark-cli`、`bun`、`pnpm`、`uv` 等 CLI 在 sandbox 命令执行里继续可见
 - `sandbox-runtime` 镜像里的 `bun` 必须安装在 sandbox session 可见的系统路径（当前固定 `/usr/local/bin`）；不要再装到 `/root/.bun/bin`，因为 remote sandbox 本身会 deny `/root`
 - Linux `amd64` 上的 `bun` 必须固定使用官方 `linux-x64-baseline` 资产，而不是让安装脚本按构建机 CPU 自动挑版本；否则镜像如果在支持 AVX2 的 builder 上构建，部署到不支持 AVX2 的老 x64 CPU 会直接 `Illegal instruction` / core dump
 - Compose 的 per-user SRT 默认基线固定为 `SRT_DEFAULT_POOL_SIZE=3`、`SRT_DEFAULT_SESSION_TIMEOUT_MS=600000`、`SRT_DEFAULT_MIN_READY_PROCESSES=1`、`SRT_DEFAULT_MAX_CONCURRENT_INIT=1`；这些默认值必须同时注入 `web` 和 `supervisor`，避免注册时建出的 pool 与 supervisor 渲染期漂移

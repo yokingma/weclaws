@@ -353,6 +353,7 @@ describe('docker compose supervisor env wiring', () => {
     expect(dockerfile).not.toContain('chromium');
     expect(dockerfile).not.toContain('AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium');
     expect(dockerfile).toContain('ENV PATH="/usr/local/bin:${PATH}"');
+    expect(dockerfile).toContain('ENV SANDBOX_COMMAND_EXTRA_PATHS="/usr/local/bin"');
     expect(dockerfile).toContain(
       'amd64) bun_target="linux-x64-baseline" ;;',
     );

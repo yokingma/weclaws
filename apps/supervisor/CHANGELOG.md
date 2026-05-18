@@ -4,6 +4,7 @@
 
 ### Changed
 
+- `sandbox-runtime` 镜像现在也会内建 `ENV SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin` 默认值，避免非 Compose 场景或运行时 env 漏注入时，session command PATH 重新丢掉 `/usr/local/bin`，导致 `node`、`lark-cli`、`bun`、`pnpm`、`uv` 等镜像内 CLI 不可执行。
 - 已按上游 `fix(sandbox-runtime): make command path expansion explicit` 收口 WeClaws 适配：Compose 现在会显式注入 `SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin`，repo-local SRT manager child env 也会继续转发它，避免上游把 session command PATH 基线收窄到系统目录后，镜像内安装到 `/usr/local/bin` 的 `lark-cli`、`bun`、`pnpm`、`uv` 在 remote sandbox 里失效。
 - 已重新核对 `@fastagent/sandbox-runtime@0.5.7` 发布包与上游源码；WeClaws 当前依赖的 `WorkspaceManager`、`SandboxProcessPool`、`SandboxAPI` 以及 `@anthropic-ai/sandbox-runtime` `sandbox-manager` patch 点仍保持兼容，因此这次只同步事实文档和 Compose 配置回归测试。
 - repo-local FastAgent CLI 的事实文档与 Compose 配置回归测试现已对齐到 `@fastagent/cli@0.8.0`。

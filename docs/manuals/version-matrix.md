@@ -120,7 +120,7 @@
 - `bun` 版本由 `infra/compose/.env.example` 里的 `BUN_VERSION=1.3.13` 控制
 - `pnpm` 版本由 `infra/compose/.env.example` 里的 `PNPM_VERSION=9.15.4` 控制，并与根 `package.json#packageManager` 对齐
 - `uv` 版本由 `infra/compose/.env.example` 里的 `UV_VERSION=0.11.7` 控制
-- 上游 `sandbox-runtime` 当前只给 session command 注入系统目录 PATH 基线；Compose 通过 `SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin` 把镜像里安装到 `/usr/local/bin` 的 `lark-cli`、`bun`、`pnpm`、`uv` 重新暴露给 remote sandbox 命令执行
+- 上游 `sandbox-runtime` 当前只给 session command 注入系统目录 PATH 基线；WeClaws 的 `sandbox-runtime` 镜像会默认导出 `SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin`，Compose 再显式透传同一个值，把镜像里安装到 `/usr/local/bin` 的 `node`、`lark-cli`、`bun`、`pnpm`、`uv` 重新暴露给 remote sandbox 命令执行
 - 当前 Compose 默认网络策略已跟随上游 `sandbox-runtime@0.5.7` 的 denylist 公开语义：通过 `SRT_DEFAULT_DENIED_DOMAINS` 写入每个 user pool，空值表示 allow-by-default
 - 当前 sandbox 镜像会预装 `lark-cli`、系统 `python3`、`gh`、`ffmpeg`、`jq`、压缩包工具、PDF / `.docx` 文本提取工具；公开 Compose 基线只保留 Browserless 远程浏览器路径，不再预装本地 Chromium 或执行 `agent-browser install --with-deps`
 - 当前默认浏览器执行路径由 `sandbox-runtime` 内的 `agent-browser@0.27.0` 连接 Compose `browserless` sidecar；`--cdp` 保留为调试兜底路径
