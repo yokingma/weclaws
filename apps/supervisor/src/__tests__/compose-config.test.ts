@@ -93,6 +93,30 @@ describe('docker compose supervisor env wiring', () => {
     expect(cnbConfig).toContain('--build-arg AGENT_BROWSER_NPM_VERSION="${AGENT_BROWSER_NPM_VERSION}"');
   });
 
+  it('keeps remote sandbox-runtime image builds aligned with the Dockerfile lark-cli default', async () => {
+    const dockerfilePath = fileURLToPath(
+      new URL('../../../../infra/docker/sandbox-runtime.Dockerfile', import.meta.url),
+    );
+    const cnbConfigPath = fileURLToPath(
+      new URL('../../../../.cnb.yml', import.meta.url),
+    );
+
+    const [dockerfile, cnbConfig] = await Promise.all([
+      readFile(dockerfilePath, 'utf8'),
+      readFile(cnbConfigPath, 'utf8'),
+    ]);
+    const dockerfileVersion = dockerfile.match(/^ARG LARK_CLI_NPM_VERSION=(?<version>\S+)$/m)
+      ?.groups?.version;
+    const cnbPinnedVersions = Array.from(
+      cnbConfig.matchAll(/LARK_CLI_NPM_VERSION:\s*"(?<version>[^"]+)"/g),
+      (match) => match.groups?.version,
+    );
+
+    expect(dockerfileVersion).toBe('1.0.32');
+    expect(cnbPinnedVersions).toEqual([dockerfileVersion, dockerfileVersion]);
+    expect(cnbConfig).toContain('--build-arg LARK_CLI_NPM_VERSION="${LARK_CLI_NPM_VERSION}"');
+  });
+
   it('pins bun and uv versions through the sandbox compose build surface', async () => {
     const composePath = fileURLToPath(
       new URL('../../../../infra/compose/docker-compose.yml', import.meta.url),
@@ -298,10 +322,21 @@ describe('docker compose supervisor env wiring', () => {
     const dockerfilePath = fileURLToPath(
       new URL('../../../../infra/docker/sandbox-runtime.Dockerfile', import.meta.url),
     );
-    const dockerfile = await readFile(dockerfilePath, 'utf8');
+    const composePath = fileURLToPath(
+      new URL('../../../../infra/compose/docker-compose.yml', import.meta.url),
+    );
+    const envExamplePath = fileURLToPath(
+      new URL('../../../../infra/compose/.env.example', import.meta.url),
+    );
+    const [composeFile, dockerfile, envExample] = await Promise.all([
+      readFile(composePath, 'utf8'),
+      readFile(dockerfilePath, 'utf8'),
+      readFile(envExamplePath, 'utf8'),
+    ]);
 
     expect(dockerfile).toContain('ARG AGENT_BROWSER_NPM_VERSION=0.27.0');
     expect(dockerfile).toContain('ARG BUN_VERSION=1.3.13');
+    expect(dockerfile).toContain('ARG LARK_CLI_NPM_VERSION=1.0.32');
     expect(dockerfile).toContain('ARG PNPM_VERSION=9.15.4');
     expect(dockerfile).toContain('ARG UV_VERSION=0.11.7');
     expect(dockerfile).toContain('ffmpeg');
@@ -313,6 +348,7 @@ describe('docker compose supervisor env wiring', () => {
     expect(dockerfile).toContain('unzip');
     expect(dockerfile).toContain('zip');
     expect(dockerfile).toContain('npm install -g agent-browser@${AGENT_BROWSER_NPM_VERSION}');
+    expect(dockerfile).toContain('npm install -g "@larksuite/cli@${LARK_CLI_NPM_VERSION}"');
     expect(dockerfile).not.toContain('agent-browser install --with-deps');
     expect(dockerfile).not.toContain('chromium');
     expect(dockerfile).not.toContain('AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium');
@@ -331,6 +367,9 @@ describe('docker compose supervisor env wiring', () => {
     expect(dockerfile).toContain(
       'curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | env UV_UNMANAGED_INSTALL="/usr/local/bin" sh',
     );
+    expect(dockerfile).toContain('lark-cli --version');
+    expect(composeFile).toContain('LARK_CLI_NPM_VERSION: ${LARK_CLI_NPM_VERSION:-1.0.32}');
+    expect(envExample).toContain('# LARK_CLI_NPM_VERSION=1.0.32');
   });
 
   it('passes web runtime env and SRT admin status config into the web container', async () => {

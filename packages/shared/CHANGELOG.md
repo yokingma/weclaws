@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-05-18
+
+### Added
+
+- 为官方公开的 Feishu/Lark 托管 bundle 新增 bundle contract 测试，锁住 24 个 `lark-*` skills 的默认同步边界、`lark-cli` 运行依赖，以及代表性 `references/` / `scripts/` / 上游 frontmatter 保留策略。
+
+### Changed
+
+- 托管 skill contract 现在明确允许 upstream-vendored 的 Feishu/Lark `lark-*` skills 保留上游 `version` / `metadata` frontmatter，并要求 `references/`、`scripts/`、`assets/` 等同级资料目录随 bundle 一起收编，避免只同步 `SKILL.md` 导致运行时工作流失真。
+
 ## 2026-05-13
 
 ### Added

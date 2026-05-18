@@ -24,7 +24,7 @@
 
 | 镜像 | Dockerfile | 作用 | 关键特征 |
 | --- | --- | --- | --- |
-| `sandbox-runtime` | `infra/docker/sandbox-runtime.Dockerfile` | FastAgent remote sandbox 服务 | 从 `@fastagent/sandbox-runtime` npm 包安装，并通过 repo-local wrapper 对齐真实 bot workspace；额外预装 `agent-browser`、`bun`、`pnpm`、`uv`、`gh`、`ffmpeg`、`jq`、压缩包工具以及 PDF / `.docx` 文本提取 CLI；默认浏览器路径通过 Browserless sidecar 执行 |
+| `sandbox-runtime` | `infra/docker/sandbox-runtime.Dockerfile` | FastAgent remote sandbox 服务 | 从 `@fastagent/sandbox-runtime` npm 包安装，并通过 repo-local wrapper 对齐真实 bot workspace；额外预装 `agent-browser`、`lark-cli`、`bun`、`pnpm`、`uv`、`gh`、`ffmpeg`、`jq`、压缩包工具以及 PDF / `.docx` 文本提取 CLI；默认浏览器路径通过 Browserless sidecar 执行 |
 | `browserless` | Compose image `ghcr.io/browserless/chromium` | 远程浏览器 sidecar | 为 `sandbox-runtime` 内的 `agent-browser -p browserless` 提供受支持的浏览器会话后端 |
 | `supervisor` | `infra/docker/supervisor.Dockerfile` | 管理 bot 生命周期、收敛状态、自动迁移 DB | 构建阶段 bundle 出 `dist/index.js`，运行层复用 repo-local `@fastagent/cli@0.7.5`，并预装 `curl`、`gh`、`ffmpeg`、`procps` |
 | `web` | `infra/docker/web.Dockerfile` | Next.js UI/API | 使用 Next `standalone` 运行层，并额外保留 `pnpm-workspace.yaml`、`apps/supervisor/package.json`、`resources/skills/managed` 与 `procps`，保证页头 FastAgent CLI 版本 badge 和 owner-scoped `Sync Skills` 接口都能在生产镜像中正常工作 |
@@ -172,7 +172,7 @@ WEB_PORT=3000
 说明：
 
 - 默认路径会从 `infra/docker/sandbox-runtime.versions.env` 里声明的 `@fastagent/sandbox-runtime` 版本构建镜像。
-- 默认路径还会通过 `AGENT_BROWSER_NPM_VERSION` 固定安装 `agent-browser`；当前公开 Compose 基线只保留 Browserless 远程浏览器路径，不再在 `sandbox-runtime` 镜像内预装本地 Chromium 或执行 `agent-browser install --with-deps`。
+- 默认路径还会通过 `AGENT_BROWSER_NPM_VERSION` 固定安装 `agent-browser`，并通过 `LARK_CLI_NPM_VERSION` 固定安装官方 `lark-cli`；当前公开 Compose 基线只保留 Browserless 远程浏览器路径，不再在 `sandbox-runtime` 镜像内预装本地 Chromium 或执行 `agent-browser install --with-deps`。
 - 默认路径还会通过 `BUN_VERSION`、`PNPM_VERSION`、`UV_VERSION` 固定安装 `bun`、`pnpm` 和 `uv`；当前基线分别是 `1.3.13`、`9.15.4`、`0.11.7`。
 - 运行入口是仓库内的 manager；manager 读取 `srt-pools.json`，为每个 enabled user pool 启动 `srt-child-entry.mjs`。
 - `srt-child-entry.mjs` 会让 FastAgent host/tool 层继续看到真实 bot workspace root；`/workspace` 只作为 sandbox 内命令别名和 `cwd` 翻译入口存在。
@@ -183,6 +183,7 @@ WEB_PORT=3000
 - 当前 Compose 基线会把新用户 pool 默认设为 `SRT_DEFAULT_POOL_SIZE=3`、`SRT_DEFAULT_MIN_READY_PROCESSES=1`、`SRT_DEFAULT_SESSION_TIMEOUT_MS=600000`。
 - sandbox 镜像里额外包含的常用 CLI 基线：
   - 浏览器自动化：`agent-browser`
+  - Feishu/Lark 官方 CLI：`lark-cli`
   - JS 运行 / 包管理：`bun`
   - Node 包管理：`pnpm`
   - Python 项目 / 包管理：`uv`
@@ -202,6 +203,7 @@ WEB_PORT=3000
 docker build -f infra/docker/sandbox-runtime.Dockerfile \
   --build-arg AGENT_BROWSER_NPM_VERSION=0.27.0 \
   --build-arg BUN_VERSION=1.3.13 \
+  --build-arg LARK_CLI_NPM_VERSION=1.0.32 \
   --build-arg PNPM_VERSION=9.15.4 \
   --build-arg UV_VERSION=0.11.7 \
   -t weclaws/sandbox-runtime:local .
@@ -264,6 +266,7 @@ EOF
 ```bash
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml build sandbox-runtime
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml exec sandbox-runtime sh -lc 'agent-browser --help'
+docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml exec sandbox-runtime sh -lc 'lark-cli --version'
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml exec sandbox-runtime sh -lc 'bun --version'
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml exec sandbox-runtime sh -lc 'pnpm --version'
 docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml exec sandbox-runtime sh -lc 'uv --version'

@@ -131,6 +131,7 @@ main:
         IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/sandbox-runtime:latest-linux-amd64
         TARGETARCH: amd64
         AGENT_BROWSER_NPM_VERSION: "0.27.0"
+        LARK_CLI_NPM_VERSION: "1.0.32"
       stages:
         - name: docker login
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
@@ -141,6 +142,7 @@ main:
               -f infra/docker/sandbox-runtime.Dockerfile \
               --build-arg TARGETARCH="${TARGETARCH}" \
               --build-arg AGENT_BROWSER_NPM_VERSION="${AGENT_BROWSER_NPM_VERSION}" \
+              --build-arg LARK_CLI_NPM_VERSION="${LARK_CLI_NPM_VERSION}" \
               .
         - name: docker push
           script: docker push "${IMAGE_TAG}"
@@ -158,6 +160,7 @@ main:
         IMAGE_TAG: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/sandbox-runtime:latest-linux-arm64
         TARGETARCH: arm64
         AGENT_BROWSER_NPM_VERSION: "0.27.0"
+        LARK_CLI_NPM_VERSION: "1.0.32"
       stages:
         - name: docker login
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
@@ -168,6 +171,7 @@ main:
               -f infra/docker/sandbox-runtime.Dockerfile \
               --build-arg TARGETARCH="${TARGETARCH}" \
               --build-arg AGENT_BROWSER_NPM_VERSION="${AGENT_BROWSER_NPM_VERSION}" \
+              --build-arg LARK_CLI_NPM_VERSION="${LARK_CLI_NPM_VERSION}" \
               .
         - name: docker push
           script: docker push "${IMAGE_TAG}"

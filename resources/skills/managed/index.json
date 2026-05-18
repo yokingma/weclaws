@@ -1,5 +1,5 @@
 {
-  "version": "2026-05-13-curated-v10",
+  "version": "2026-05-18-curated-v11",
   "skills": [
     {
       "name": "agent-browser",
@@ -180,6 +180,390 @@
         "kind": "weclaws-curated",
         "repo": "weclaws",
         "path": "resources/skills/managed/editorial-card-screenshot"
+      }
+    },
+    {
+      "name": "lark-shared",
+      "path": "lark-shared",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-shared"
+      }
+    },
+    {
+      "name": "lark-calendar",
+      "path": "lark-calendar",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-calendar"
+      }
+    },
+    {
+      "name": "lark-im",
+      "path": "lark-im",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-im"
+      }
+    },
+    {
+      "name": "lark-doc",
+      "path": "lark-doc",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-doc"
+      }
+    },
+    {
+      "name": "lark-drive",
+      "path": "lark-drive",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-drive"
+      }
+    },
+    {
+      "name": "lark-markdown",
+      "path": "lark-markdown",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-markdown"
+      }
+    },
+    {
+      "name": "lark-sheets",
+      "path": "lark-sheets",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-sheets"
+      }
+    },
+    {
+      "name": "lark-slides",
+      "path": "lark-slides",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-slides"
+      }
+    },
+    {
+      "name": "lark-base",
+      "path": "lark-base",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-base"
+      }
+    },
+    {
+      "name": "lark-task",
+      "path": "lark-task",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-task"
+      }
+    },
+    {
+      "name": "lark-mail",
+      "path": "lark-mail",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-mail"
+      }
+    },
+    {
+      "name": "lark-contact",
+      "path": "lark-contact",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-contact"
+      }
+    },
+    {
+      "name": "lark-wiki",
+      "path": "lark-wiki",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-wiki"
+      }
+    },
+    {
+      "name": "lark-event",
+      "path": "lark-event",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-event"
+      }
+    },
+    {
+      "name": "lark-vc",
+      "path": "lark-vc",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-vc"
+      }
+    },
+    {
+      "name": "lark-whiteboard",
+      "path": "lark-whiteboard",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-whiteboard"
+      }
+    },
+    {
+      "name": "lark-minutes",
+      "path": "lark-minutes",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-minutes"
+      }
+    },
+    {
+      "name": "lark-openapi-explorer",
+      "path": "lark-openapi-explorer",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-openapi-explorer"
+      }
+    },
+    {
+      "name": "lark-skill-maker",
+      "path": "lark-skill-maker",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-skill-maker"
+      }
+    },
+    {
+      "name": "lark-attendance",
+      "path": "lark-attendance",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-attendance"
+      }
+    },
+    {
+      "name": "lark-approval",
+      "path": "lark-approval",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-approval"
+      }
+    },
+    {
+      "name": "lark-workflow-meeting-summary",
+      "path": "lark-workflow-meeting-summary",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-workflow-meeting-summary"
+      }
+    },
+    {
+      "name": "lark-workflow-standup-report",
+      "path": "lark-workflow-standup-report",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-workflow-standup-report"
+      }
+    },
+    {
+      "name": "lark-okr",
+      "path": "lark-okr",
+      "defaultSync": true,
+      "homepage": "https://www.feishu.cn/feishu-cli",
+      "requires": {
+        "bins": [
+          "lark-cli"
+        ]
+      },
+      "source": {
+        "kind": "upstream-vendored",
+        "repo": "larksuite/cli",
+        "path": "skills/lark-okr"
       }
     }
   ]

@@ -88,7 +88,9 @@
 - `sandbox-runtime` 镜像构建时必须删除 Debian 账号数据库备份文件 `/etc/passwd-`、`/etc/shadow-`、`/etc/group-` 和 `/etc/gshadow-`；session denyRead 仍保留这些路径作为运行期兜底
 - `sandbox-runtime` 的发布镜像构建任务不能硬编码或传入 `SANDBOX_RUNTIME_NPM_VERSION`；生产 `latest` 镜像必须走同一个 Dockerfile 版本文件默认值
 - Compose 默认还会通过 `AGENT_BROWSER_NPM_VERSION` 固定 `agent-browser` 版本；当前基线是 `0.27.0`
+- Compose 默认还会通过 `LARK_CLI_NPM_VERSION` 固定官方 Feishu/Lark CLI；当前基线是 `@larksuite/cli@1.0.32`
 - CNB 远程 `sandbox-runtime` 发布任务如果显式传入 `AGENT_BROWSER_NPM_VERSION`，必须与 `infra/docker/sandbox-runtime.Dockerfile` 的默认值保持一致，并由 `compose-config` 回归测试锁住；不能让远程镜像 build-arg 覆盖回旧版本
+- CNB 远程 `sandbox-runtime` 发布任务如果显式传入 `LARK_CLI_NPM_VERSION`，也必须与 `infra/docker/sandbox-runtime.Dockerfile` 的默认值保持一致，并由 `compose-config` 回归测试锁住；不能让远程镜像 build-arg 静默漂到不同的 Feishu/Lark CLI 基线
 - Compose 默认还会通过 `BUN_VERSION`、`PNPM_VERSION`、`UV_VERSION` 固定额外预装的 JS / Python 工具链基线；当前默认分别是 `bun@1.3.13`、`pnpm@9.15.4`、`uv@0.11.7`
 - `sandbox-runtime` 镜像里的 `bun` 必须安装在 sandbox session 可见的系统路径（当前固定 `/usr/local/bin`）；不要再装到 `/root/.bun/bin`，因为 remote sandbox 本身会 deny `/root`
 - Linux `amd64` 上的 `bun` 必须固定使用官方 `linux-x64-baseline` 资产，而不是让安装脚本按构建机 CPU 自动挑版本；否则镜像如果在支持 AVX2 的 builder 上构建，部署到不支持 AVX2 的老 x64 CPU 会直接 `Illegal instruction` / core dump
@@ -96,6 +98,7 @@
 - Compose 默认还会提供 `browserless` sidecar 作为受支持的远程浏览器后端；浏览器自动化的产品路径固定为 `sandbox-runtime` 内的 `agent-browser -p browserless` 或显式远程 `--cdp` 连接远程浏览器后端，不再支持在 nested sandbox 内直接 launch 本地 Chromium
 - 一次性截图、PDF、scrape 这类 one-shot 远程浏览器任务可以直接调用 Browserless；但当前托管 skill 仍统一放在 `agent-browser` 下，不额外拆分 Browserless skill
 - 如果 Browserless 或远程 CDP 连接不可用，browser automation 必须直接报阻塞；不要回退到本地浏览器启动、本地浏览器安装或宿主机浏览器会话
+- 官方公开的 Feishu/Lark skill bundle 当前已进入 managed bundle 默认同步清单：收编范围固定为 24 个 `lark-*` skills（与官方公开 catalog 对齐，不包含 `lark-vc-agent`）；为降低上游同步漂移，必须连同 `references/`、`scripts/`、`assets/` 一起 vendor，不要只同步 `SKILL.md`
 - `ppt-skill` 当前已进入 managed bundle 默认同步清单；其主要产物是 bot workspace 内同级交付的 `index.html`、`images/`、`assets/` 目录，预览不应依赖 remote sandbox 内的 `file://` 本地浏览器路径；`assets/` 至少包含本地 `motion.min.js` 与 `lucide.min.js`，模板不得再依赖外网 CDN；模板内嵌关键拉丁字形，中文继续走系统字体栈，不把整包 CJK 字体打进托管 skill，并应内联默认 favicon，避免静态预览链路额外打出 `/favicon.ico` 404
 - `editorial-card-screenshot` 当前已进入 managed bundle 默认同步清单；其截图链路固定为 Browserless direct：skill 侧只允许用 `curl + python3` 把自包含 HTML 提交到远程 `/screenshot` API，不允许本地 Chrome / Chromium、宿主机浏览器或 `file://` 路径回退；如果卡片依赖图片或图标，必须内联或使用远程可访问资源
 - repo-local `sandbox-runtime` 镜像入口固定走 `infra/sandbox-runtime/entry.mjs` manager；manager 读取 `srt-pools.json`，按 enabled user pool 启停 `srt-child-entry.mjs`
@@ -120,7 +123,7 @@
 - 生产 Compose override 现在同时拉起 `browserless` sidecar；不要把受支持的远程浏览器执行路径重新收回到 supervisor 或宿主机
 - 公开仓库的 `docker-compose.prod.yml` 默认拉取 `ghcr.io/baseclaw/weclaws/{web,supervisor,sandbox-runtime}:latest`；如果切换到别的镜像仓库，必须连同 Compose 回归测试和部署手册一起更新
 - AI 在 remote sandbox 内直接调用的浏览器、媒体、文档和文件处理 CLI 必须收口到 `sandbox-runtime`，不要继续把这类能力加到 `supervisor` 镜像里
-- 当前 `sandbox-runtime` 运行镜像会额外预装 `agent-browser`、`bun`、`pnpm`、`uv`、系统 `python3`、`gh`、`ffmpeg`、`jq`、`zip`、`unzip`、`file`、`poppler-utils`、`pandoc`；其中 PDF / `.docx` 仅覆盖纯文本提取，不包含 OCR 或 `.doc` 兼容链；浏览器自动化的受支持路径固定为 Browserless sidecar，`--cdp` 仅保留为运维/调试兜底
+- 当前 `sandbox-runtime` 运行镜像会额外预装 `agent-browser`、`lark-cli`、`bun`、`pnpm`、`uv`、系统 `python3`、`gh`、`ffmpeg`、`jq`、`zip`、`unzip`、`file`、`poppler-utils`、`pandoc`；其中 PDF / `.docx` 仅覆盖纯文本提取，不包含 OCR 或 `.doc` 兼容链；浏览器自动化的受支持路径固定为 Browserless sidecar，`--cdp` 仅保留为运维/调试兜底
 - Compose 相关回归测试要锁住跨服务的环境注入 contract；当前至少需要覆盖 `web` 容器的 `WEB_ADMIN_EMAILS` / `WEB_USER_BOT_LIMIT` 和核心 web env，避免 `standalone` 运行层因为拿不到宿主机根 `.env` 而静默漂移
 - 即使 sandbox 改为 repo-local packaging，应用层边界也不变；FastAgent child 只依赖 owner-specific `SANDBOX_URL` / `SANDBOX_API_KEY` 和既有 HTTP / Socket.IO contract
 - Compose 部署路径固定为仓库内四服务拓扑（`web`、`supervisor`、`sandbox-runtime`、`browserless`）；不要重新引入 external sandbox override 或 `SANDBOX_RUNTIME_IMAGE`

@@ -1,5 +1,6 @@
 ARG AGENT_BROWSER_NPM_VERSION=0.27.0
 ARG BUN_VERSION=1.3.13
+ARG LARK_CLI_NPM_VERSION=1.0.32
 ARG PNPM_VERSION=9.15.4
 ARG UV_VERSION=0.11.7
 
@@ -12,6 +13,7 @@ ARG TARGETARCH
 ARG SANDBOX_RUNTIME_NPM_VERSION
 ARG AGENT_BROWSER_NPM_VERSION
 ARG BUN_VERSION
+ARG LARK_CLI_NPM_VERSION
 ARG PNPM_VERSION
 ARG UV_VERSION
 
@@ -63,6 +65,8 @@ RUN set -eux; \
   SANDBOX_RUNTIME_NPM_VERSION="${configured_sandbox_runtime_version:-$default_sandbox_runtime_version}"; \
   test -n "$SANDBOX_RUNTIME_NPM_VERSION"; \
   npm install -g "@fastagent/sandbox-runtime@${SANDBOX_RUNTIME_NPM_VERSION}"
+RUN npm install -g "@larksuite/cli@${LARK_CLI_NPM_VERSION}" \
+  && lark-cli --version
 RUN npm install -g agent-browser@${AGENT_BROWSER_NPM_VERSION}
 
 WORKDIR /app

@@ -1,5 +1,5 @@
 {
-  "version": "2026-05-13-curated-v7",
+  "version": "2026-05-18-curated-v11",
   "skills": [
     {
       "name": "agent-browser",
@@ -32,6 +32,102 @@
     {
       "name": "personal-planner",
       "path": "personal-planner"
+    },
+    {
+      "name": "lark-shared",
+      "path": "lark-shared"
+    },
+    {
+      "name": "lark-calendar",
+      "path": "lark-calendar"
+    },
+    {
+      "name": "lark-im",
+      "path": "lark-im"
+    },
+    {
+      "name": "lark-doc",
+      "path": "lark-doc"
+    },
+    {
+      "name": "lark-drive",
+      "path": "lark-drive"
+    },
+    {
+      "name": "lark-markdown",
+      "path": "lark-markdown"
+    },
+    {
+      "name": "lark-sheets",
+      "path": "lark-sheets"
+    },
+    {
+      "name": "lark-slides",
+      "path": "lark-slides"
+    },
+    {
+      "name": "lark-base",
+      "path": "lark-base"
+    },
+    {
+      "name": "lark-task",
+      "path": "lark-task"
+    },
+    {
+      "name": "lark-mail",
+      "path": "lark-mail"
+    },
+    {
+      "name": "lark-contact",
+      "path": "lark-contact"
+    },
+    {
+      "name": "lark-wiki",
+      "path": "lark-wiki"
+    },
+    {
+      "name": "lark-event",
+      "path": "lark-event"
+    },
+    {
+      "name": "lark-vc",
+      "path": "lark-vc"
+    },
+    {
+      "name": "lark-whiteboard",
+      "path": "lark-whiteboard"
+    },
+    {
+      "name": "lark-minutes",
+      "path": "lark-minutes"
+    },
+    {
+      "name": "lark-openapi-explorer",
+      "path": "lark-openapi-explorer"
+    },
+    {
+      "name": "lark-skill-maker",
+      "path": "lark-skill-maker"
+    },
+    {
+      "name": "lark-attendance",
+      "path": "lark-attendance"
+    },
+    {
+      "name": "lark-approval",
+      "path": "lark-approval"
+    },
+    {
+      "name": "lark-workflow-meeting-summary",
+      "path": "lark-workflow-meeting-summary"
+    },
+    {
+      "name": "lark-workflow-standup-report",
+      "path": "lark-workflow-standup-report"
+    },
+    {
+      "name": "lark-okr",
+      "path": "lark-okr"
     }
   ]
 }

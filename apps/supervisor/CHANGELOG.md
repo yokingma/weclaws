@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-05-18
+
+### Changed
+
+- `sandbox-runtime` 镜像构建基线现在固定预装官方 `@larksuite/cli@1.0.32`，并通过新的 `LARK_CLI_NPM_VERSION` build arg 暴露版本钉住入口；Compose、版本矩阵与部署手册已同步更新。
+- managed skills 默认同步清单现在纳入官方公开的 Feishu/Lark 24-skill bundle：`lark-*` 目录按 upstream-vendored 方式完整收编，保留 `references/`、`scripts/`、`assets/` 等运行资料，不包含未进入官方公开 catalog 的 `lark-vc-agent`。
+
 ## 2026-05-14
 
 ### Fixed

@@ -134,6 +134,7 @@ fastagent --channel weixin
 - JavaScript / TypeScript 工具链：`bun`、`pnpm`。
 - Python 工具链：`python3`、`uv`。
 - 常用系统工具：`bash`、`curl`、`git`、`gh`、`ripgrep`、`jq`、`file`、`zip`、`unzip`、`socat`、`procps`。
+- 飞书 / Lark 官方 CLI：`lark-cli`。
 - 构建工具：`make`、`g++`。
 - 媒体处理：`ffmpeg`。
 - 文档和文本提取：`pdftotext`、`pdfinfo`、`pandoc`。
@@ -166,10 +167,11 @@ WeClaws 内置一组官方托管技能，来源位于 `resources/skills/managed`
 | `video-frames` | 用 ffmpeg 从视频中截帧或生成检查图 | `ffmpeg` |
 | `personal-planner` | 面向复杂任务的先规划、再执行工作流 | 无额外命令依赖 |
 | `agent-browser` | 浏览器自动化技能说明已收编，默认走 Browserless sidecar | `agent-browser`、Browserless sidecar |
+| `lark-*`（24 skills） | 官方公开的 Feishu/Lark 技能包，覆盖 IM、日历、文档、Drive、Sheets、Slides、Base、Task、Mail、Wiki、会议纪要、OKR、审批等域能力 | `lark-cli` |
 | `ppt-skill` | 生成 HTML 网页 PPT，并交付本地可预览的 deck 资源目录 | `node` |
 | `editorial-card-screenshot` | 生成 editorial 风格信息卡，并通过远程 Browserless 导出 PNG | `curl`、`python3`、Browserless sidecar |
 
-技能是否真正可用，还取决于运行环境里是否具备对应命令和授权。例如 GitHub 技能需要可用的 `gh` 认证上下文；`ppt-skill` 依赖 `node` 执行校验脚本；`editorial-card-screenshot` 的截图导出依赖 Browserless 远程路径；用户级密钥和 OAuth 状态不会内置进镜像。
+技能是否真正可用，还取决于运行环境里是否具备对应命令和授权。例如 GitHub 技能需要可用的 `gh` 认证上下文；`lark-*` 技能依赖 bot 自己完成 `lark-cli` 的应用配置与授权；`ppt-skill` 依赖 `node` 执行校验脚本；`editorial-card-screenshot` 的截图导出依赖 Browserless 远程路径；用户级密钥和 OAuth 状态不会内置进镜像。
 
 ## WeClaws 和 FastAgent 的分工
 

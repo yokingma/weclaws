@@ -28,7 +28,7 @@
 
 当前默认同步清单版本：
 
-- `2026-05-13-curated-v8`
+- `2026-05-18-curated-v11`
 
 `manifest.json` 是默认同步的唯一权威来源。`index.json` 只用于展示、依赖说明和安装提示，不参与默认同步决策。
 
@@ -42,12 +42,16 @@
 | `video-frames` | 用 ffmpeg 从视频中截帧或生成检查图 | `ffmpeg` | 默认同步 |
 | `personal-planner` | 面向复杂任务的先规划、再执行工作流 | 无额外命令依赖 | 默认同步 |
 | `agent-browser` | 浏览器自动化技能说明已收编 | `agent-browser`、Browserless sidecar | 默认同步 |
+| `lark-*`（24 skills） | 官方公开的 Feishu/Lark 技能包，覆盖 IM、日历、文档、Drive、Sheets、Slides、Base、Task、Mail、Wiki、VC、Minutes、OKR、审批等域能力 | `lark-cli` | 默认同步 |
 | `ppt-skill` | 生成单文件 HTML 网页 PPT、配图提示词与瑞士风校验脚本 | `node` | 默认同步 |
 | `editorial-card-screenshot` | 生成高密度 editorial HTML 信息卡，并通过远程 Browserless 截图导出 PNG | `curl`、`python3`、Browserless sidecar | 默认同步 |
 
 说明：
 
 - `agent-browser` 已进入托管同步清单，`sandbox-runtime` 镜像也预置了 `agent-browser`。
+- 官方公开的 Feishu/Lark bundle 现已按 upstream-vendored 方式收编到 `resources/skills/managed/lark-*`；默认同步范围与官方公开 24-skill catalog 对齐，不包含当前仍未进入该 catalog 的 `lark-vc-agent`。
+- 这组 `lark-*` skills 会保留上游 `version` / `metadata` frontmatter，以及 `references/`、`scripts/`、`assets/` 等同级目录，避免 WeClaws 侧裁剪后破坏其多步骤工作流与帮助材料。
+- 默认 Compose 部署现在会在 `sandbox-runtime` 镜像内预装官方 `lark-cli`；各 bot 的配置与授权态继续落在其持久化 `HOME` / `XDG_*` 下，不会写进镜像层。
 - 默认 Compose 部署现在会额外提供 `browserless` sidecar；托管技能里的受支持运行路径只有 `agent-browser -p browserless` 和显式远程 `--cdp`，不允许在 nested sandbox 或宿主机内直接 launch 本地浏览器。
 - Browserless 在当前仓库里首先是远程浏览器后端；一次性截图、PDF、scrape 这类 one-shot 任务可以直接使用 Browserless，但当前仍统一收口在 `agent-browser` skill 下说明，不单独拆托管 skill。
 - `ppt-skill` 已进入 `manifest.json` 默认同步清单；其预览与交付继续以生成产物优先，不依赖 remote sandbox 内的本地浏览器路径。
@@ -112,11 +116,13 @@ storage/instances/<botId>/
 - `python3`
 - `ffmpeg`
 - `agent-browser`
+- `lark-cli`
 - Browserless sidecar（默认 Compose 部署）
 
 技能是否真正可用仍取决于运行环境和用户授权。例如：
 
 - `github` 需要可用的 `gh` 认证上下文。
+- `lark-*` skills 依赖 bot 自己完成 `lark-cli config init` / `auth login` 并在其持久化 `HOME` / `XDG_*` 中保留授权态。
 - `weather` 默认通过公开天气接口查询，不需要用户 API key。
 - `video-frames` 依赖输入视频文件在当前 bot 可访问路径内。
 - 用户级密钥和 OAuth 状态不会被写入镜像层。
