@@ -1,7 +1,7 @@
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   VIRTUAL_STATE_ROOT,
   VIRTUAL_WORKSPACE_ROOT,
@@ -9,8 +9,27 @@ import {
 } from '../../../../../infra/sandbox-runtime/workspace-root-override.mjs';
 
 const tempDirs: string[] = [];
+const ORIGINAL_BROWSERLESS_API_KEY = process.env.BROWSERLESS_API_KEY;
+const ORIGINAL_BROWSERLESS_API_URL = process.env.BROWSERLESS_API_URL;
+
+beforeEach(() => {
+  process.env.BROWSERLESS_API_KEY = 'browserless-key';
+  process.env.BROWSERLESS_API_URL = 'http://browserless:3000';
+});
 
 afterEach(async () => {
+  if (ORIGINAL_BROWSERLESS_API_KEY === undefined) {
+    delete process.env.BROWSERLESS_API_KEY;
+  } else {
+    process.env.BROWSERLESS_API_KEY = ORIGINAL_BROWSERLESS_API_KEY;
+  }
+
+  if (ORIGINAL_BROWSERLESS_API_URL === undefined) {
+    delete process.env.BROWSERLESS_API_URL;
+  } else {
+    process.env.BROWSERLESS_API_URL = ORIGINAL_BROWSERLESS_API_URL;
+  }
+
   await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { force: true, recursive: true })));
 });
 
@@ -288,5 +307,76 @@ describe('sandbox-runtime session security override', () => {
       `${metadataRoot}/**`,
     ]));
     expect(restrictions.denyWrite).toContain(workspaceMapFile);
+  });
+
+  it('injects browserless env into session command options without overriding caller values', async () => {
+    class ConfigValidationError extends Error {}
+
+    class FakeSandboxProcessPool {
+      async createSession(..._args: unknown[]) {
+        return {
+          processInfo: {
+            id: 'proc_1',
+          },
+          session: {
+            id: 'session_1',
+            processId: 'proc_1',
+            userId: 'user_1',
+            workspaceId: 'ws_1',
+            workspacePath: '/workspace',
+          },
+        };
+      }
+
+      async resolveCommandCwd(session: { workspacePath: string }, requestedCwd?: string) {
+        return requestedCwd ?? session.workspacePath;
+      }
+
+      getWorkspaceFilesystemRestrictions() {
+        return {
+          allowRead: [],
+          allowWrite: [],
+          denyRead: [],
+          denyWrite: [],
+        };
+      }
+
+      async resolveCommandExecutionOptions(
+        _sessionId: string,
+        options: { cwd?: string; env?: Record<string, string>; timeout?: number },
+      ) {
+        return {
+          cwd: options.cwd ?? '/workspace',
+          env: options.env,
+          timeout: options.timeout,
+        };
+      }
+    }
+
+    installSessionSecurityOverrides({
+      ConfigValidationError,
+      SandboxProcessPool: FakeSandboxProcessPool,
+      workspaceMapFile: '/app/storage/sandbox-runtime-private/workspace-map.json',
+    });
+
+    const pool = new FakeSandboxProcessPool();
+
+    await expect(pool.resolveCommandExecutionOptions('session_1', {})).resolves.toMatchObject({
+      env: {
+        BROWSERLESS_API_KEY: 'browserless-key',
+        BROWSERLESS_API_URL: 'http://browserless:3000',
+      },
+    });
+
+    await expect(pool.resolveCommandExecutionOptions('session_1', {
+      env: {
+        BROWSERLESS_API_KEY: 'custom-key',
+      },
+    })).resolves.toMatchObject({
+      env: {
+        BROWSERLESS_API_KEY: 'custom-key',
+        BROWSERLESS_API_URL: 'http://browserless:3000',
+      },
+    });
   });
 });

@@ -219,7 +219,7 @@
 | `PNPM_VERSION` | compose build arg | No | `9.15.4` | 控制 repo-local sandbox image 安装的 `pnpm` 版本 |
 | `UV_VERSION` | compose build arg | No | `0.11.7` | 控制 repo-local sandbox image 安装的 `uv` 版本 |
 | `SANDBOX_RUNTIME_PORT` | sandbox-runtime manager, host port mapping | No | `8788` | Compose 默认同时影响对外 health 端口和 manager 容器内端口 |
-| `SANDBOX_RUNTIME_LOG_LEVEL` | sandbox-runtime manager | No | `info` | Compose 映射到 manager `LOG_LEVEL` |
+| `SANDBOX_RUNTIME_LOG_LEVEL` | sandbox-runtime manager + per-user child | No | `info` | Compose 映射到 manager `LOG_LEVEL`，并继续透传到 per-user child runtime |
 | `SANDBOX_COMMAND_EXTRA_PATHS` | sandbox-runtime manager + per-user child | No | `/usr/local/bin` | 上游 session command PATH 基线只含系统目录；WeClaws 镜像默认导出它，Compose 也显式透传它，把镜像里安装到 `/usr/local/bin` 的 CLI 追加回 sandbox 命令执行 PATH |
 | `SRT_DEFAULT_POOL_SIZE` | web, supervisor | No | `3` | Compose 里的新用户 pool 默认进程池大小 |
 | `SRT_DEFAULT_MIN_READY_PROCESSES` | web, supervisor | No | `1` | Compose 里的新用户 pool 默认预热进程数 |
@@ -242,8 +242,8 @@
 - per-user SRT child 的 `API_KEY` 由 `srt-pools.json` 逐用户写入，并只注入对应 child
 - `AGENT_BROWSER_NPM_VERSION`、`BUN_VERSION`、`PNPM_VERSION`、`UV_VERSION` 只影响 sandbox 镜像构建内容，不会作为运行时 env 进入容器
 - `SANDBOX_COMMAND_EXTRA_PATHS` 是运行时 env，不是 build arg；镜像自身会默认设置 `/usr/local/bin`，Compose 也显式透传它，负责把上游 `sandbox-runtime` session command 默认 PATH 之外的镜像内 CLI 路径追加回来
-- `BROWSERLESS_TOKEN` 会同时进入 `browserless` sidecar 和 `sandbox-runtime`，后者再通过 child env allowlist 透传成 `BROWSERLESS_API_KEY`
-- `BROWSERLESS_API_URL` 默认指向 Compose 内部服务名 `http://browserless:3000`；如果切到外部 Browserless，再显式覆盖这个地址
+- `BROWSERLESS_TOKEN` 会同时进入 `browserless` sidecar 和 `sandbox-runtime`，后者再通过 child env allowlist 透传成 `BROWSERLESS_API_KEY`，并由 WeClaws wrapper 显式补进 session command env
+- `BROWSERLESS_API_URL` 默认指向 Compose 内部服务名 `http://browserless:3000`；如果切到外部 Browserless，再显式覆盖这个地址；WeClaws wrapper 也会把它显式补进 session command env
 - base Compose 默认不会把 `browserless` 暴露到宿主机；如果需要宿主机调试端口，应通过额外 Compose override 单独添加 `ports`
 - Compose 里的 FastAgent child `SANDBOX_URL` 由 `SRT_SERVICE_HOST` 和 owner pool 端口推导，不在 `infra/compose/.env.example` 中单独配置
 - `DATABASE_URL` 和 `INSTANCES_ROOT` 在当前 Compose 文件里固定写成容器内路径，不从 `infra/compose/.env.example` 读取

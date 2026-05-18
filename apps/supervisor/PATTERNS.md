@@ -118,7 +118,7 @@
 - Compose 的 `supervisor` 服务必须显式透传 `FASTAGENT_SANDBOX_MODE`；不要依赖 compose 插值变量自动进入容器环境
 - Compose 的 `sandbox-runtime` 服务必须和 `web` / `supervisor` 共享同一份 `claws_instances` 卷，并挂到同一个 `/app/storage/instances` 路径；否则真实 workspace 映射即使命中，runtime 也无法访问 bot 工作区
 - Compose 的 `sandbox-runtime` 服务还必须和 `web` / `supervisor` 共享私有 `sandbox_runtime_private` 卷，并挂到 `/app/storage/sandbox-runtime-private`；`srt-pools.json`、`srt-pool-status.json` 和 per-user workspace map 只能放在这条私有共享路径下
-- Compose 的 `sandbox-runtime` 服务入口是 manager health port；只注入 `SRT_POOL_CONFIG_FILE`、`SRT_POOL_STATUS_FILE`、`SRT_MANAGER_PORT` 这类 manager 配置，不再注入全局 `API_KEY` / `POOL_SIZE` / `SANDBOX_DEFAULT_*` 单池 env；远程浏览器路径允许额外透传 `BROWSERLESS_API_URL` / `BROWSERLESS_API_KEY`
+- Compose 的 `sandbox-runtime` 服务入口是 manager health port；只注入 `SRT_POOL_CONFIG_FILE`、`SRT_POOL_STATUS_FILE`、`SRT_MANAGER_PORT` 这类 manager 配置，不再注入全局 `API_KEY` / `POOL_SIZE` / `SANDBOX_DEFAULT_*` 单池 env；`LOG_LEVEL` 必须继续透传到 per-user child，保证 manager 与 child runtime 观测粒度一致；远程浏览器路径允许额外透传 `BROWSERLESS_API_URL` / `BROWSERLESS_API_KEY`，并由 WeClaws wrapper 显式补进 session command env，保证 `agent-browser -p browserless` 与 Browserless direct skill 在 nested sandbox 内可见
 - Compose 的 `sandbox-runtime` 服务必须先 `cap_drop: [ALL]`，再只加回 `SYS_ADMIN` 和 `NET_ADMIN`，并使用 `cgroup: private`；同时除了 `seccomp=unconfined` 之外，还必须显式设置 `apparmor=unconfined`。Ubuntu 24 默认的 `docker-default` AppArmor profile 会让 bubblewrap 在 mount namespace 阶段直接拒绝命令执行
 - 生产环境如果切到 `infra/compose/docker-compose.prod.yml`，必须用 `${WECLAWS_DATA_ROOT}` bind mount 显式把 `sqlite`、`instances`、`sandbox-user-workspaces` 和 `sandbox-runtime-private` 落到宿主机目录；不要把生产运行态继续藏在 Docker named volume 里
 - 生产 Compose override 现在同时拉起 `browserless` sidecar；不要把受支持的远程浏览器执行路径重新收回到 supervisor 或宿主机

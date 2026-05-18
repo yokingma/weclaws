@@ -176,6 +176,7 @@ WEB_PORT=3000
 - 默认路径还会通过 `AGENT_BROWSER_NPM_VERSION` 固定安装 `agent-browser`，并通过 `LARK_CLI_NPM_VERSION` 固定安装官方 `lark-cli`；当前公开 Compose 基线只保留 Browserless 远程浏览器路径，不再在 `sandbox-runtime` 镜像内预装本地 Chromium 或执行 `agent-browser install --with-deps`。
 - 默认路径还会通过 `BUN_VERSION`、`PNPM_VERSION`、`UV_VERSION` 固定安装 `bun`、`pnpm` 和 `uv`；当前基线分别是 `1.3.13`、`9.15.4`、`0.11.7`。
 - 由于上游 `sandbox-runtime` 现在只给 session command 注入系统目录 PATH 基线，WeClaws 的 `sandbox-runtime` 镜像自身会默认设置 `SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin`，Compose 还会显式透传同一个值，把镜像里安装到 `/usr/local/bin` 的 `node`、`lark-cli`、`bun`、`pnpm`、`uv` 等 CLI 重新暴露给 remote sandbox 命令执行。
+- `LOG_LEVEL` 会先驱动 manager 自身日志级别，并继续透传到 per-user SRT child；如果需要排查某个 child runtime，不能只看 manager 是否切到了 `debug`。
 - 运行入口是仓库内的 manager；manager 读取 `srt-pools.json`，为每个 enabled user pool 启动 `srt-child-entry.mjs`。
 - `srt-child-entry.mjs` 会让 FastAgent host/tool 层继续看到真实 bot workspace root；`/workspace` 只作为 sandbox 内命令别名和 `cwd` 翻译入口存在。
 - Compose 不再给 manager 传全局 `API_KEY`；per-user SRT child 的 API key 由 DB pool config 生成后写入 `srt-pools.json`。

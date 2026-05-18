@@ -4,6 +4,8 @@
 
 ### Changed
 
+- WeClaws 的 `sandbox-runtime` wrapper 现在会把 `BROWSERLESS_API_URL` / `BROWSERLESS_API_KEY` 显式补进 session command env，但仍保留调用方显式传值优先，修复 `agent-browser -p browserless` 与 Browserless direct skill 只能在 runtime 进程可见、在 nested sandbox 命令里却读不到变量的问题。
+- `SANDBOX_RUNTIME_LOG_LEVEL` 现在会继续透传到 per-user SRT child，避免 manager 已切到 `debug` 但 child runtime 仍停留在默认 `info`，导致远程沙箱排障时日志粒度不一致。
 - `sandbox-runtime` 镜像现在也会内建 `ENV SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin` 默认值，避免非 Compose 场景或运行时 env 漏注入时，session command PATH 重新丢掉 `/usr/local/bin`，导致 `node`、`lark-cli`、`bun`、`pnpm`、`uv` 等镜像内 CLI 不可执行。
 - 已按上游 `fix(sandbox-runtime): make command path expansion explicit` 收口 WeClaws 适配：Compose 现在会显式注入 `SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin`，repo-local SRT manager child env 也会继续转发它，避免上游把 session command PATH 基线收窄到系统目录后，镜像内安装到 `/usr/local/bin` 的 `lark-cli`、`bun`、`pnpm`、`uv` 在 remote sandbox 里失效。
 - 已重新核对 `@fastagent/sandbox-runtime@0.5.7` 发布包与上游源码；WeClaws 当前依赖的 `WorkspaceManager`、`SandboxProcessPool`、`SandboxAPI` 以及 `@anthropic-ai/sandbox-runtime` `sandbox-manager` patch 点仍保持兼容，因此这次只同步事实文档和 Compose 配置回归测试。

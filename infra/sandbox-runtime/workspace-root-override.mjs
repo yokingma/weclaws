@@ -16,6 +16,10 @@ const REAL_STATE_PATH_MARKER = Symbol.for(
 const REAL_WORKSPACE_PATH_MARKER = Symbol.for(
   'weclaws.sandbox-runtime.workspace-root-override.real-workspace-path',
 );
+const BROWSERLESS_COMMAND_ENV_KEYS = [
+  'BROWSERLESS_API_KEY',
+  'BROWSERLESS_API_URL',
+];
 const SENSITIVE_ETC_READ_DENY_PATHS = [
   '/etc/passwd',
   '/etc/passwd-',
@@ -131,6 +135,9 @@ export function installSessionSecurityOverrides({
 
   const originalCreateSession = prototype.createSession;
   const originalGetWorkspaceFilesystemRestrictions = prototype.getWorkspaceFilesystemRestrictions;
+  const originalResolveCommandExecutionOptions = typeof prototype.resolveCommandExecutionOptions === 'function'
+    ? prototype.resolveCommandExecutionOptions
+    : null;
 
   prototype.createSession = async function patchedCreateSession(...args) {
     const result = await originalCreateSession.apply(this, args);
@@ -253,6 +260,15 @@ export function installSessionSecurityOverrides({
     ]);
   };
 
+  if (originalResolveCommandExecutionOptions) {
+    prototype.resolveCommandExecutionOptions = async function patchedResolveCommandExecutionOptions(
+      ...args
+    ) {
+      const result = await originalResolveCommandExecutionOptions.apply(this, args);
+      return injectBrowserlessCommandEnv(result);
+    };
+  }
+
   Object.defineProperty(prototype, SESSION_SECURITY_PATCH_MARKER, {
     configurable: false,
     enumerable: false,
@@ -308,6 +324,38 @@ function attachRealSessionPathMarkers(session) {
 
   session.workspacePath = realWorkspacePath;
   return session;
+}
+
+function injectBrowserlessCommandEnv(commandOptions) {
+  if (!commandOptions || typeof commandOptions !== 'object') {
+    return commandOptions;
+  }
+
+  const injectedEnv = {};
+  const existingEnv = commandOptions.env ?? null;
+
+  for (const key of BROWSERLESS_COMMAND_ENV_KEYS) {
+    if (existingEnv && key in existingEnv) {
+      continue;
+    }
+
+    const value = process.env[key];
+    if (typeof value === 'string' && value.length > 0) {
+      injectedEnv[key] = value;
+    }
+  }
+
+  if (Object.keys(injectedEnv).length === 0) {
+    return commandOptions;
+  }
+
+  return {
+    ...commandOptions,
+    env: {
+      ...(commandOptions.env ?? {}),
+      ...injectedEnv,
+    },
+  };
 }
 
 function resolveRequestedCwd(requestedCwd, realWorkspacePath, realStatePath) {
