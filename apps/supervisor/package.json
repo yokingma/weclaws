@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@fastagent/cli": "0.8.0",
+    "@fastagent/cli": "0.8.1",
     "@weclaws/db": "workspace:*",
     "@weclaws/shared": "workspace:*",
     "better-sqlite3": "^12.10.0"
