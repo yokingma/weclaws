@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
-    "drizzle-kit": "^0.30.6"
+    "drizzle-kit": "^0.31.10"
   },
   "scripts": {
     "build": "pnpm exec tsc -p tsconfig.json",

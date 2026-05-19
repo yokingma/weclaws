@@ -32,7 +32,9 @@
   "pnpm": {
     "overrides": {
       "defu": "6.1.7",
-      "postcss": "8.5.14"
+      "@esbuild-kit/core-utils>esbuild": "0.25.12",
+      "postcss": "8.5.14",
+      "ws": "8.20.1"
     }
   },
   "scripts": {

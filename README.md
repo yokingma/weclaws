@@ -217,6 +217,8 @@ pnpm db:generate
 pnpm db:migrate
 ```
 
+首次启动前确认仓库根 `.env` 存在，并把 `BETTER_AUTH_SECRET=replace-me` 改成随机密钥，例如 `openssl rand -hex 32` 的输出；缺少根 `.env` 会导致 web 运行时报 `DATABASE_URL` / `APP_BASE_URL` / `BETTER_AUTH_SECRET` 缺失。
+
 分别启动网页和 supervisor：
 
 ```bash
