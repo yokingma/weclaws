@@ -9,7 +9,7 @@
 - `sandbox-runtime` 镜像现在也会内建 `ENV SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin` 默认值，避免非 Compose 场景或运行时 env 漏注入时，session command PATH 重新丢掉 `/usr/local/bin`，导致 `node`、`lark-cli`、`bun`、`pnpm`、`uv` 等镜像内 CLI 不可执行。
 - 已按上游 `fix(sandbox-runtime): make command path expansion explicit` 收口 WeClaws 适配：Compose 现在会显式注入 `SANDBOX_COMMAND_EXTRA_PATHS=/usr/local/bin`，repo-local SRT manager child env 也会继续转发它，避免上游把 session command PATH 基线收窄到系统目录后，镜像内安装到 `/usr/local/bin` 的 `lark-cli`、`bun`、`pnpm`、`uv` 在 remote sandbox 里失效。
 - 已重新核对 `@fastagent/sandbox-runtime@0.5.7` 发布包与上游源码；WeClaws 当前依赖的 `WorkspaceManager`、`SandboxProcessPool`、`SandboxAPI` 以及 `@anthropic-ai/sandbox-runtime` `sandbox-manager` patch 点仍保持兼容，因此这次只同步事实文档和 Compose 配置回归测试。
-- repo-local FastAgent CLI 的事实文档与 Compose 配置回归测试现已对齐到 `@fastagent/cli@0.8.0`。
+- repo-local FastAgent CLI 的事实文档与 Compose 配置回归测试现已对齐到 `@fastagent/cli@0.8.2`。
 - `sandbox-runtime` 镜像构建基线现在固定预装官方 `@larksuite/cli@1.0.32`，并通过新的 `LARK_CLI_NPM_VERSION` build arg 暴露版本钉住入口；Compose、版本矩阵与部署手册已同步更新。
 - managed skills 默认同步清单现在纳入官方公开的 Feishu/Lark 24-skill bundle：`lark-*` 目录按 upstream-vendored 方式完整收编，保留 `references/`、`scripts/`、`assets/` 等运行资料，不包含未进入官方公开 catalog 的 `lark-vc-agent`。
 

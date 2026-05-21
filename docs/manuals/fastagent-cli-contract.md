@@ -38,7 +38,7 @@ WeClaws 当前只依赖这几类能力：
 
 当前 supervisor 运行时依赖的 FastAgent 包版本是：
 
-- `@fastagent/cli@0.8.0`
+- `@fastagent/cli@0.8.2`
 
 ## 3. Binary Path Contract
 

@@ -26,7 +26,7 @@
 | --- | --- | --- | --- |
 | `sandbox-runtime` | `infra/docker/sandbox-runtime.Dockerfile` | FastAgent remote sandbox 服务 | 从 `@fastagent/sandbox-runtime` npm 包安装，并通过 repo-local wrapper 对齐真实 bot workspace；额外预装 `agent-browser`、`lark-cli`、`bun`、`pnpm`、`uv`、`gh`、`ffmpeg`、`jq`、压缩包工具以及 PDF / `.docx` 文本提取 CLI；默认浏览器路径通过 Browserless sidecar 执行 |
 | `browserless` | Compose image `ghcr.io/browserless/chromium` | 远程浏览器 sidecar | 为 `sandbox-runtime` 内的 `agent-browser -p browserless` 提供受支持的浏览器会话后端 |
-| `supervisor` | `infra/docker/supervisor.Dockerfile` | 管理 bot 生命周期、收敛状态、自动迁移 DB | 构建阶段 bundle 出 `dist/index.js`，运行层复用 repo-local `@fastagent/cli@0.8.0`，并预装 `curl`、`gh`、`ffmpeg`、`procps` |
+| `supervisor` | `infra/docker/supervisor.Dockerfile` | 管理 bot 生命周期、收敛状态、自动迁移 DB | 构建阶段 bundle 出 `dist/index.js`，运行层复用 repo-local `@fastagent/cli@0.8.2`，并预装 `curl`、`gh`、`ffmpeg`、`procps` |
 | `web` | `infra/docker/web.Dockerfile` | Next.js UI/API | 使用 Next `standalone` 运行层，并额外保留 `pnpm-workspace.yaml`、`apps/supervisor/package.json`、`resources/skills/managed` 与 `procps`，保证页头 FastAgent CLI 版本 badge 和 owner-scoped `Sync Skills` 接口都能在生产镜像中正常工作 |
 
 ### 2.2 Build Context

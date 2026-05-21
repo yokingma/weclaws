@@ -77,7 +77,7 @@
 
 | Dependency | Current Version |
 | --- | --- |
-| `@fastagent/cli` | `0.8.0` |
+| `@fastagent/cli` | `0.8.2` |
 | `better-sqlite3` | `^12.10.0` |
 | `esbuild` | `^0.28.0` |
 | `tsx` | `^4.20.5` |

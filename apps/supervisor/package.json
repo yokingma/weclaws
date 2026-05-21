@@ -1,10 +1,10 @@
 {
   "name": "@weclaws/supervisor",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@fastagent/cli": "0.8.1",
+    "@fastagent/cli": "0.8.2",
     "@weclaws/db": "workspace:*",
     "@weclaws/shared": "workspace:*",
     "better-sqlite3": "^12.10.0"

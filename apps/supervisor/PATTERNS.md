@@ -82,7 +82,7 @@
 
 - 当前容器入口固定为 `node apps/supervisor/dist/index.js`
 - `apps/supervisor/scripts/build.mjs` 是 supervisor Docker 运行产物的唯一构建入口：它会 bundle `src/index.ts` 以及 workspace 内的 `@weclaws/db` / `@weclaws/shared`，并把 `packages/db/src/migrations` 复制到 `apps/supervisor/dist/migrations`
-- `apps/supervisor` 自己声明 `@fastagent/cli@0.8.0` 运行时依赖；Compose 构建直接复用包级 `node_modules/.bin/fastagent`，不再额外全局安装或固定注入 `FASTAGENT_BINARY_PATH`
+- `apps/supervisor` 自己声明 `@fastagent/cli@0.8.2` 运行时依赖；Compose 构建直接复用包级 `node_modules/.bin/fastagent`，不再额外全局安装或固定注入 `FASTAGENT_BINARY_PATH`
 - repo-local `@fastagent/cli` 版本升级时，`apps/supervisor/package.json`、根 `pnpm-lock.yaml`、`docs/manuals/fastagent-cli-contract.md`、`docs/manuals/version-matrix.md`、`docs/manuals/docker-deployment-runbook.md` 必须在同一次改动里同步，并由 `apps/supervisor/src/__tests__/compose-config.test.ts` 锁住
 - Compose 默认会在本仓库内构建 `sandbox-runtime` 运行镜像，并通过 `infra/docker/sandbox-runtime.versions.env` 固定 `@fastagent/sandbox-runtime` 版本；当前默认基线是 `0.5.7`
 - `sandbox-runtime` 镜像构建时必须删除 Debian 账号数据库备份文件 `/etc/passwd-`、`/etc/shadow-`、`/etc/group-` 和 `/etc/gshadow-`；session denyRead 仍保留这些路径作为运行期兜底
