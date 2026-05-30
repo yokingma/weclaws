@@ -7,11 +7,11 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/baseclaw/weclaws.git"
+    "url": "git+https://github.com/yokingma/weclaws.git"
   },
-  "homepage": "https://github.com/baseclaw/weclaws#readme",
+  "homepage": "https://github.com/yokingma/weclaws#readme",
   "bugs": {
-    "url": "https://github.com/baseclaw/weclaws/issues"
+    "url": "https://github.com/yokingma/weclaws/issues"
   },
   "keywords": [
     "wechat",

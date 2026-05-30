@@ -5,7 +5,7 @@
   </h2>
   <p><strong>一键部署、多用户、可长期托管的微信 AI 智能体控制台</strong></p>
   <p>
-    <a href="https://github.com/baseclaw/weclaws"><img alt="GitHub stars" src="https://img.shields.io/github/stars/baseclaw/weclaws?style=social" /></a>
+    <a href="https://github.com/yokingma/weclaws"><img alt="GitHub stars" src="https://img.shields.io/github/stars/yokingma/weclaws?style=social" /></a>
     <a href="https://www.npmjs.com/package/@fastagent/cli"><img alt="@fastagent/cli" src="https://img.shields.io/npm/v/%40fastagent%2Fcli?label=%40fastagent%2Fcli" /></a>
     <a href="https://www.npmjs.com/package/@fastagent/sandbox-runtime"><img alt="@fastagent/sandbox-runtime" src="https://img.shields.io/npm/v/%40fastagent%2Fsandbox-runtime?label=%40fastagent%2Fsandbox-runtime" /></a>
     <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg" /></a>

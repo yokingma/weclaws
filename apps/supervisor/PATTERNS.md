@@ -122,7 +122,7 @@
 - Compose 的 `sandbox-runtime` 服务必须先 `cap_drop: [ALL]`，再只加回 `SYS_ADMIN` 和 `NET_ADMIN`，并使用 `cgroup: private`；同时除了 `seccomp=unconfined` 之外，还必须显式设置 `apparmor=unconfined`。Ubuntu 24 默认的 `docker-default` AppArmor profile 会让 bubblewrap 在 mount namespace 阶段直接拒绝命令执行
 - 生产环境如果切到 `infra/compose/docker-compose.prod.yml`，必须用 `${WECLAWS_DATA_ROOT}` bind mount 显式把 `sqlite`、`instances`、`sandbox-user-workspaces` 和 `sandbox-runtime-private` 落到宿主机目录；不要把生产运行态继续藏在 Docker named volume 里
 - 生产 Compose override 现在同时拉起 `browserless` sidecar；不要把受支持的远程浏览器执行路径重新收回到 supervisor 或宿主机
-- 公开仓库的 `docker-compose.prod.yml` 默认拉取 `ghcr.io/baseclaw/weclaws/{web,supervisor,sandbox-runtime}:latest`；如果切换到别的镜像仓库，必须连同 Compose 回归测试和部署手册一起更新
+- 公开仓库的 `docker-compose.prod.yml` 默认拉取 `ghcr.io/yokingma/weclaws/{web,supervisor,sandbox-runtime}:latest`；如果切换到别的镜像仓库，必须连同 Compose 回归测试和部署手册一起更新
 - AI 在 remote sandbox 内直接调用的浏览器、媒体、文档和文件处理 CLI 必须收口到 `sandbox-runtime`，不要继续把这类能力加到 `supervisor` 镜像里
 - 当前 `sandbox-runtime` 运行镜像会额外预装 `agent-browser`、`lark-cli`、`bun`、`pnpm`、`uv`、系统 `python3`、`gh`、`ffmpeg`、`jq`、`zip`、`unzip`、`file`、`poppler-utils`、`pandoc`；其中 PDF / `.docx` 仅覆盖纯文本提取，不包含 OCR 或 `.doc` 兼容链；浏览器自动化的受支持路径固定为 Browserless sidecar，`--cdp` 仅保留为运维/调试兜底
 - Compose 相关回归测试要锁住跨服务的环境注入 contract；当前至少需要覆盖 `web` 容器的 `WEB_ADMIN_EMAILS` / `WEB_USER_BOT_LIMIT` 和核心 web env，避免 `standalone` 运行层因为拿不到宿主机根 `.env` 而静默漂移

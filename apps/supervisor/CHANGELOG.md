@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-05-30
+
+### Changed
+
+- 公开仓库和生产镜像发布基线已切到 `github.com/yokingma/weclaws` 与 `ghcr.io/yokingma/weclaws/*`；同步更新 GitHub Actions、生产 Compose override、部署手册和 Compose 配置回归测试。
+- repo-local FastAgent CLI 锁文件和事实文档已补齐到 `@fastagent/cli@0.8.4`，修复 package metadata、`pnpm-lock.yaml`、CLI contract、版本矩阵和部署手册之间的漂移。
+
 ## 2026-05-18
 
 ### Changed
@@ -82,7 +89,7 @@
 ### Changed
 
 - `sandbox-runtime` 运行镜像现在额外预装 `gh`，让默认同步的 `github` 托管技能在 remote sandbox 执行面具备基础 CLI；README、部署手册、版本矩阵和托管技能手册已同步补齐。
-- `infra/compose/docker-compose.prod.yml` 的公开镜像前缀已切到 `ghcr.io/baseclaw/weclaws/*:latest`，避免公开仓库继续默认引用旧私有 registry；对应 Compose 回归测试也已同步到 GHCR 基线。
+- `infra/compose/docker-compose.prod.yml` 的公开镜像前缀已切到当时的公开 GHCR namespace，避免公开仓库继续默认引用旧私有 registry；对应 Compose 回归测试也已同步到 GHCR 基线。
 
 ### Fixed
 

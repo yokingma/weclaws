@@ -6,7 +6,7 @@ services:
 
   sandbox-runtime:
     build: !reset null
-    image: ghcr.io/baseclaw/weclaws/sandbox-runtime:latest
+    image: ghcr.io/yokingma/weclaws/sandbox-runtime:latest
     pull_policy: always
     volumes: !override
       - ${WECLAWS_DATA_ROOT}/sandbox-user-workspaces:/app/apps/sandbox-runtime/user-workspaces
@@ -15,7 +15,7 @@ services:
 
   supervisor:
     build: !reset null
-    image: ghcr.io/baseclaw/weclaws/supervisor:latest
+    image: ghcr.io/yokingma/weclaws/supervisor:latest
     pull_policy: always
     volumes: !override
       - ${WECLAWS_DATA_ROOT}/sqlite:/app/storage/sqlite
@@ -24,7 +24,7 @@ services:
 
   web:
     build: !reset null
-    image: ghcr.io/baseclaw/weclaws/web:latest
+    image: ghcr.io/yokingma/weclaws/web:latest
     pull_policy: always
     volumes: !override
       - ${WECLAWS_DATA_ROOT}/sqlite:/app/storage/sqlite

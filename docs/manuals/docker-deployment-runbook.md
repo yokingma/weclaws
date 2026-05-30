@@ -26,7 +26,7 @@
 | --- | --- | --- | --- |
 | `sandbox-runtime` | `infra/docker/sandbox-runtime.Dockerfile` | FastAgent remote sandbox 服务 | 从 `@fastagent/sandbox-runtime` npm 包安装，并通过 repo-local wrapper 对齐真实 bot workspace；额外预装 `agent-browser`、`lark-cli`、`bun`、`pnpm`、`uv`、`gh`、`ffmpeg`、`jq`、压缩包工具以及 PDF / `.docx` 文本提取 CLI；默认浏览器路径通过 Browserless sidecar 执行 |
 | `browserless` | Compose image `ghcr.io/browserless/chromium` | 远程浏览器 sidecar | 为 `sandbox-runtime` 内的 `agent-browser -p browserless` 提供受支持的浏览器会话后端 |
-| `supervisor` | `infra/docker/supervisor.Dockerfile` | 管理 bot 生命周期、收敛状态、自动迁移 DB | 构建阶段 bundle 出 `dist/index.js`，运行层复用 repo-local `@fastagent/cli@0.8.2`，并预装 `curl`、`gh`、`ffmpeg`、`procps` |
+| `supervisor` | `infra/docker/supervisor.Dockerfile` | 管理 bot 生命周期、收敛状态、自动迁移 DB | 构建阶段 bundle 出 `dist/index.js`，运行层复用 repo-local `@fastagent/cli@0.8.4`，并预装 `curl`、`gh`、`ffmpeg`、`procps` |
 | `web` | `infra/docker/web.Dockerfile` | Next.js UI/API | 使用 Next `standalone` 运行层，并额外保留 `pnpm-workspace.yaml`、`apps/supervisor/package.json`、`resources/skills/managed` 与 `procps`，保证页头 FastAgent CLI 版本 badge 和 owner-scoped `Sync Skills` 接口都能在生产镜像中正常工作 |
 
 ### 2.2 Build Context
@@ -40,16 +40,16 @@
 
 公开仓的生产镜像目标地址为：
 
-- `ghcr.io/baseclaw/weclaws/web:latest`
-- `ghcr.io/baseclaw/weclaws/supervisor:latest`
-- `ghcr.io/baseclaw/weclaws/sandbox-runtime:latest`
+- `ghcr.io/yokingma/weclaws/web:latest`
+- `ghcr.io/yokingma/weclaws/supervisor:latest`
+- `ghcr.io/yokingma/weclaws/sandbox-runtime:latest`
 
 发布新版本时，推送 `v*` tag 会触发 `.github/workflows/docker-images.yml`，自动构建并推送三张镜像。每张镜像都会写入当前 tag（例如 `v0.1.0`）和 `latest` 两个标签，供生产 Compose override 拉取。
 
 ### 2.4 Production Compose Override
 
 - `infra/compose/docker-compose.yml` 作为本地联调基线。
-- `infra/compose/docker-compose.prod.yml` 会用 `build: !reset null` 清掉基础文件里的本地构建定义，默认改成拉取 `ghcr.io/baseclaw/weclaws/*:latest`，并通过 `WECLAWS_DATA_ROOT` 把 SQLite、instances、sandbox user workspaces 和 sandbox-runtime private config/status 绑定到宿主机目录。
+- `infra/compose/docker-compose.prod.yml` 会用 `build: !reset null` 清掉基础文件里的本地构建定义，默认改成拉取 `ghcr.io/yokingma/weclaws/*:latest`，并通过 `WECLAWS_DATA_ROOT` 把 SQLite、instances、sandbox user workspaces 和 sandbox-runtime private config/status 绑定到宿主机目录。
 - 生产 override 还会拉起 `ghcr.io/browserless/chromium:latest`，保持和本地基线一致的远程浏览器拓扑。
 - 生产部署时应叠加两个 Compose 文件，保持同一份服务拓扑、卷、健康检查和环境变量 contract。
 

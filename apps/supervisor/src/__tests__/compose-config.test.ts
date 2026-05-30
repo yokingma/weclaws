@@ -291,15 +291,15 @@ describe('docker compose supervisor env wiring', () => {
     ]);
 
     expect(prodComposeFile).toContain(
-      'image: ghcr.io/baseclaw/weclaws/sandbox-runtime:latest',
+      'image: ghcr.io/yokingma/weclaws/sandbox-runtime:latest',
     );
     expect(prodComposeFile).toContain(
       'image: ghcr.io/browserless/chromium:latest',
     );
     expect(prodComposeFile).toContain(
-      'image: ghcr.io/baseclaw/weclaws/supervisor:latest',
+      'image: ghcr.io/yokingma/weclaws/supervisor:latest',
     );
-    expect(prodComposeFile).toContain('image: ghcr.io/baseclaw/weclaws/web:latest');
+    expect(prodComposeFile).toContain('image: ghcr.io/yokingma/weclaws/web:latest');
     expect(prodComposeFile).toContain('build: !reset null');
     expect(prodComposeFile).toContain('pull_policy: always');
     expect(prodComposeFile).toContain('${WECLAWS_DATA_ROOT}/sqlite:/app/storage/sqlite');
